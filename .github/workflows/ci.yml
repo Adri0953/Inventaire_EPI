@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches-ignore:
+      - main
+
+jobs:
+  lint:
+    name: Lint (ESLint + Prettier)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Installation des dépendances
+        run: bun install
+
+      - name: Vérification du lint
+        run: bun run lint
+
+  check:
+    name: Svelte Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Installation des dépendances
+        run: bun install
+
+      - name: Vérification svelte-check
+        run: bun run check
+
+  test:
+    name: Tests unitaires (Vitest)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_DB: local_test
+          POSTGRES_USER: runner
+          POSTGRES_PASSWORD: password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DATABASE_URL: postgresql://runner:password@localhost:5432/local_test
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Installation des dépendances
+        run: bun install
+
+      - name: Migration de la base de données
+        run: bun run db:migrate
+
+      - name: Exécution des tests unitaires
+        run: bun run test:unit

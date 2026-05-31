@@ -13,6 +13,7 @@
     "lint": "prettier --check . && eslint .",
     "format": "prettier --write .",
     "test:unit": "vitest",
+    "db:migrate": "bun run scripts/migrate.ts",
     "test": "npm run test:unit -- --run"
   },
   "devDependencies": {
