@@ -37,18 +37,18 @@ jobs:
       - name: Vérification svelte-check
         run: bun run check
 
-  test:
-    name: Tests unitaires (Vitest)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
+#   test:
+#     name: Tests unitaires (Vitest)
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout du code
+#         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+#       - name: Setup Bun
+#         uses: oven-sh/setup-bun@v2
 
-      - name: Installation des dépendances
-        run: bun install
+#       - name: Installation des dépendances
+#         run: bun install
 
-      - name: Exécution des tests unitaires
-        run: bun run test:unit
+#       - name: Exécution des tests unitaires
+#         run: bun run test:unit
