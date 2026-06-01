@@ -3,7 +3,6 @@
 </script>
 
 <div class="login-container">
-  <h2>Connexion</h2>
   <form method="POST" action="?/login">
     <div class="form-group">
       <label for="email">Email</label>
@@ -19,7 +18,7 @@
       <p class="error">{form.error}</p>
     {/if}
 
-    <button type="submit" class="btn-primary">Sign In</button>
+    <button type="submit" class="btn-primary">Connexion</button>
   </form>
 </div>
 
@@ -79,4 +78,3 @@
     margin-bottom: 1rem;
   }
 </style>
-
