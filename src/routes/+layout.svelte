@@ -13,7 +13,7 @@
       <h1>Inventaire EPI</h1>
     </a>
     {#if data.session}
-      <form method="POST" action="?/logout">
+      <form method="POST" action="/?/logout">
         <button type="submit" class="btn-logout">Déconnexion</button>
       </form>
     {/if}

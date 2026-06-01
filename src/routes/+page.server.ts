@@ -1,6 +1,13 @@
 import { supabase } from '$lib/supabase';
 import { fail, redirect } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ cookies }) => {
+  const session = cookies.get('session');
+  if (session) {
+    throw redirect(303, '/dashboard');
+  }
+};
 
 export const actions: Actions = {
   // Action pour gérer la connexion
