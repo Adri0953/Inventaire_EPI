@@ -32,12 +32,6 @@
     max-width: 400px;
   }
 
-  h2 {
-    text-align: center;
-    color: #2c5282;
-    margin-bottom: 1.5rem;
-  }
-
   .form-group {
     margin-bottom: 1rem;
   }
