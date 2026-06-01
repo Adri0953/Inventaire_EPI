@@ -10,7 +10,7 @@
     </div>
 
     <div class="form-group">
-      <label for="password">Password</label>
+      <label for="password">Mot de passe</label>
       <input id="password" name="password" type="password" required />
     </div>
 
