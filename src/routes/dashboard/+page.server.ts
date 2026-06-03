@@ -139,7 +139,7 @@ export const load: PageServerLoad = async () => {
         };
       }),
       lowStock: (allModeles || [])
-        .filter((e) => e.stock_total < e.seuil_alerte)
+        .filter((e) => e.seuil_alerte > 0 && e.stock_total / e.seuil_alerte <= 0.5)
         .sort((a, b) => {
           const rank = (e: typeof a) => {
             if (e.stock_total === 0) return 0;

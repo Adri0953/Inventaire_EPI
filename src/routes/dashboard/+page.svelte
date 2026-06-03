@@ -71,7 +71,7 @@
 					{/if}
 				</div>
 				<div>
-					<h2 class="text-2xl font-black text-white tracking-tight uppercase">Alertes prioritaires</h2>
+					<h2 class="text-2xl font-black text-white tracking-tight uppercase">Alertes</h2>
 					<p class="text-xs font-bold uppercase tracking-widest mt-0.5 transition-colors duration-500
 						{totalAlerts > 0 ? 'text-red-200' : 'text-emerald-200'}">
 						{totalAlerts > 0 ? 'Points à traiter dans l\'immédiat' : 'Aucune action requise'}
@@ -154,11 +154,14 @@
 							<div class="flex items-center justify-between p-4 rounded-2xl bg-white border border-orange-50 hover:border-orange-200 transition-all shadow-sm">
 								<div class="min-w-0">
 									<p class="font-bold text-sm text-blue-950 truncate">{ctrl.epi_nom || 'EPI inconnu'}</p>
-									<p class="text-xs text-slate-400 mt-1 font-medium">{ctrl.chauffeur_nom || 'En stock'}</p>
+									<p class="text-xs text-slate-400 flex items-center gap-1 mt-1 font-medium">
+											<Users class="w-3 h-3" /> {ctrl.chauffeur_nom || 'En stock'}
+										</p>
 								</div>
 								<div class="text-right shrink-0 font-black">
+									<p class="text-[10px] font-bold text-slate-400 tabular-nums uppercase tracking-tighter">{formatDate(ctrl.prochain_controle)}</p>
 									{#if days < 0}
-										<div class="px-2.5 py-0.5 bg-red-600 text-[9px] font-black text-white rounded-full uppercase shadow-lg shadow-red-200">Retard</div>
+										<div class="mt-1 px-2.5 py-0.5 bg-red-600 text-[9px] font-black text-white rounded-full uppercase shadow-lg shadow-red-200">Retard</div>
 									{:else}
 										<span class="text-sm text-orange-600">J-{days}</span>
 									{/if}
@@ -175,64 +178,122 @@
 			</div>
 
 			<!-- Stock Bas -->
-			<div class="group relative bg-white rounded-4xl shadow-xl hover:shadow-2xl transition-all duration-500 border-2 border-amber-100 overflow-hidden flex flex-col md:col-span-2 h-96">
+			<div class="group relative bg-white rounded-4xl shadow-xl hover:shadow-2xl transition-all duration-500 border-2 border-amber-100 overflow-hidden flex flex-col md:col-span-2">
 				<div class="p-8 bg-linear-to-br from-amber-500 to-amber-400 relative overflow-hidden">
 					<Boxes class="absolute -right-4 -top-4 w-32 h-32 text-white/10 rotate-45" />
 					<div class="relative z-10 flex items-center justify-between">
 						<div class="flex flex-col">
-							<h3 class="text-2xl font-black text-white tracking-tight">Niveaux des stocks</h3>
-						</div>
-						<div class="bg-white/20 backdrop-blur-md rounded-2xl px-3 py-1 border border-white/30">
-							<span class="text-sm font-black text-white tabular-nums">{alerts.lowStock.length}</span>
+							<h3 class="text-2xl font-black text-white tracking-tight">Alertes des stocks</h3>
 						</div>
 					</div>
 				</div>
-				<div class="overflow-y-auto flex-1 bg-white flex flex-col">
-					{#if alerts.lowStock.length > 0}
-						<div class="sticky top-0 z-10 bg-white border-b border-slate-100 grid items-center gap-4 px-5 py-2.5"
-							style="grid-template-columns: 72px 1fr 110px 90px 120px">
-							<p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Niveau</p>
-							<p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Désignation</p>
-							<p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Catégorie</p>
-							<p class="text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Stock</p>
-							<p class="text-[9px] font-black uppercase tracking-widest text-slate-400">/ Seuil</p>
-						</div>
-						{#each alerts.lowStock as epi (epi.id_modele_epi)}
-							{@const pct = epi.seuil_alerte > 0 ? Math.min(Math.round((epi.stock_total / epi.seuil_alerte) * 100), 100) : 0}
-							{@const severity = epi.stock_total === 0 ? 'rupture' : pct <= 40 ? 'critique' : 'bas'}
-							<div class="grid items-center gap-4 px-5 py-3.5 border-b border-slate-50 hover:bg-slate-50 transition-colors"
+				<div class="flex">
+					<!-- Table -->
+					<div class="flex-1 bg-white flex flex-col">
+						{#if alerts.lowStock.length > 0}
+							<div class="bg-white border-b border-slate-100 grid items-center gap-4 px-5 py-2.5"
 								style="grid-template-columns: 72px 1fr 110px 90px 120px">
-								{#if severity === 'rupture'}
-									<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 border border-red-300 text-[9px] font-black text-red-800 uppercase w-fit">
-										<span class="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0"></span>Rupture
-									</span>
-								{:else if severity === 'critique'}
-									<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-[9px] font-black text-red-600 uppercase w-fit">
-										<span class="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></span>Critique
-									</span>
-								{:else}
-									<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[9px] font-black text-amber-700 uppercase w-fit">
-										<span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>Bas
-									</span>
-								{/if}
-								<p class="font-bold text-xs text-slate-800 truncate">{epi.designation}</p>
-								<span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg w-fit truncate">{epi.type || '—'}</span>
-								<p class="text-xs font-black tabular-nums text-right
-									{severity === 'rupture' ? 'text-red-700' : severity === 'critique' ? 'text-red-500' : 'text-amber-600'}">
-									{epi.stock_total} / {epi.seuil_alerte}
-								</p>
-								<div class="h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-									<div class="h-full rounded-full transition-all duration-700
-										{severity === 'rupture' ? 'bg-slate-300' : severity === 'critique' ? 'bg-red-500' : 'bg-amber-400'}"
-										style="width: {pct}%">
+								<p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Niveau</p>
+								<p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Désignation</p>
+								<p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Catégorie</p>
+								<p class="text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">Stock restant</p>
+								<p class="text-[9px] font-black uppercase tracking-widest text-slate-400">/ Seuil</p>
+							</div>
+							{#each alerts.lowStock as epi (epi.id_modele_epi)}
+								{@const pct = epi.seuil_alerte > 0 ? Math.min(Math.round((epi.stock_total / epi.seuil_alerte) * 100), 100) : 0}
+								{@const severity = epi.stock_total === 0 ? 'rupture' : pct <= 40 ? 'critique' : 'bas'}
+								<div class="grid items-center gap-4 px-5 py-3.5 border-b border-slate-50 hover:bg-slate-50 transition-colors"
+									style="grid-template-columns: 72px 1fr 110px 90px 120px">
+									{#if severity === 'rupture'}
+										<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 border border-red-300 text-[9px] font-black text-red-800 uppercase w-fit">
+											<span class="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0"></span>Rupture
+										</span>
+									{:else if severity === 'critique'}
+										<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-[9px] font-black text-red-600 uppercase w-fit">
+											<span class="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></span>Critique
+										</span>
+									{:else}
+										<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[9px] font-black text-amber-700 uppercase w-fit">
+											<span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>Bas
+										</span>
+									{/if}
+									<p class="font-bold text-xs text-slate-800 truncate">{epi.designation}</p>
+									<span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg w-fit truncate">{epi.type || '—'}</span>
+									<p class="text-xs font-black tabular-nums text-right
+										{severity === 'rupture' ? 'text-red-700' : severity === 'critique' ? 'text-red-500' : 'text-amber-600'}">
+										{epi.stock_total} / {epi.seuil_alerte}
+									</p>
+									<div class="h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+										<div class="h-full rounded-full transition-all duration-700
+											{severity === 'rupture' ? 'bg-slate-300' : severity === 'critique' ? 'bg-red-500' : 'bg-amber-400'}"
+											style="width: {pct}%">
+										</div>
 									</div>
 								</div>
+							{/each}
+						{:else}
+							<div class="flex flex-col items-center justify-center gap-3 py-10 opacity-30">
+								<PackagePlus class="w-12 h-12 text-slate-400" />
+								<p class="text-xs font-black uppercase tracking-widest">Niveaux optimaux</p>
 							</div>
-						{/each}
-					{:else}
-						<div class="h-full flex flex-col items-center justify-center gap-3 opacity-30">
-							<PackagePlus class="w-12 h-12 text-slate-400" />
-							<p class="text-xs font-black uppercase tracking-widest">Niveaux optimaux</p>
+						{/if}
+					</div>
+
+					<!-- Donut — répartition par sévérité -->
+					{#if alerts.lowStock.length > 0}
+						{@const total = alerts.lowStock.length}
+						{@const nbRuptures = alerts.lowStock.filter(e => e.stock_total === 0).length}
+						{@const nbCritiques = alerts.lowStock.filter(e => e.stock_total > 0 && e.stock_total / e.seuil_alerte <= 0.4).length}
+						{@const nbBas = total - nbRuptures - nbCritiques}
+						{@const C = 2 * Math.PI * 40}
+						{@const dashR = (nbRuptures / total) * C}
+						{@const dashC = (nbCritiques / total) * C}
+						{@const dashB = (nbBas / total) * C}
+						<div class="w-52 shrink-0 border-l-2 border-amber-100 bg-amber-50/40 flex flex-col items-center justify-center gap-5 p-6">
+							<div class="relative">
+								<svg width="120" height="120" viewBox="0 0 120 120" style="transform: rotate(-90deg)">
+									<circle cx="60" cy="60" r="40" fill="none" stroke="#f1f5f9" stroke-width="16" />
+									{#if nbRuptures > 0}
+										<circle cx="60" cy="60" r="40" fill="none" stroke="#dc2626" stroke-width="16"
+											stroke-dasharray="{dashR} {C}" stroke-dashoffset="0" />
+									{/if}
+									{#if nbCritiques > 0}
+										<circle cx="60" cy="60" r="40" fill="none" stroke="#f87171" stroke-width="16"
+											stroke-dasharray="{dashC} {C}" stroke-dashoffset="{-dashR}" />
+									{/if}
+									{#if nbBas > 0}
+										<circle cx="60" cy="60" r="40" fill="none" stroke="#fbbf24" stroke-width="16"
+											stroke-dasharray="{dashB} {C}" stroke-dashoffset="{-(dashR + dashC)}" />
+									{/if}
+								</svg>
+								<div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+									<span class="text-2xl font-black text-slate-800 tabular-nums">{total}</span>
+									<span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">alertes</span>
+								</div>
+							</div>
+							<div class="flex flex-col gap-2 w-full">
+								<div class="flex items-center justify-between">
+									<div class="flex items-center gap-2">
+										<span class="w-2.5 h-2.5 rounded-sm bg-red-600 shrink-0"></span>
+										<span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Rupture</span>
+									</div>
+									<span class="text-sm font-black text-slate-800">{nbRuptures}</span>
+								</div>
+								<div class="flex items-center justify-between">
+									<div class="flex items-center gap-2">
+										<span class="w-2.5 h-2.5 rounded-sm bg-red-400 shrink-0"></span>
+										<span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Critique</span>
+									</div>
+									<span class="text-sm font-black text-slate-800">{nbCritiques}</span>
+								</div>
+								<div class="flex items-center justify-between">
+									<div class="flex items-center gap-2">
+										<span class="w-2.5 h-2.5 rounded-sm bg-amber-400 shrink-0"></span>
+										<span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bas</span>
+									</div>
+									<span class="text-sm font-black text-slate-800">{nbBas}</span>
+								</div>
+							</div>
 						</div>
 					{/if}
 				</div>
@@ -358,7 +419,7 @@
 					<History class="w-5 h-5 text-slate-400" />
 					<h3 class="font-bold text-slate-800">Flux Inventaire</h3>
 				</div>
-				<button class="text-[10px] font-black text-slate-400 uppercase hover:text-slate-900 transition-colors">Logs</button>
+				<button class="text-[10px] font-black text-slate-400 uppercase hover:text-slate-900 transition-colors">Voir tout</button>
 			</div>
 			<div class="divide-y divide-slate-50">
 				{#each activity.movements as item (item.id_historique)}
