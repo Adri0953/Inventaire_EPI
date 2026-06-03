@@ -1,0 +1,61 @@
+CREATE TABLE Chauffeur (
+    Id_Chauffeur UUID DEFAULT gen_random_uuid(),
+    prenom       VARCHAR(50) NOT NULL,
+    nom          VARCHAR(50) NOT NULL,
+    activite     VARCHAR(50),
+    PRIMARY KEY(Id_Chauffeur)
+);
+
+CREATE TABLE Modele_EPI (
+    Id_Modele_EPI UUID DEFAULT gen_random_uuid(),
+    designation   VARCHAR(50) NOT NULL,
+    type          VARCHAR(50) NOT NULL,
+    taille        VARCHAR(50),
+    stock_total   INT NOT NULL,
+    seuil_alerte  INT NOT NULL,
+    PRIMARY KEY(Id_Modele_EPI)
+);
+
+CREATE TABLE EPI (
+    Id_EPI        UUID DEFAULT gen_random_uuid(),
+    date_expiration DATE,
+    statut        VARCHAR(50) CHECK (statut IN ('disponible', 'attribué', 'hors_service')) DEFAULT 'disponible',
+    Id_Modele_EPI UUID NOT NULL,
+    PRIMARY KEY(Id_EPI),
+    FOREIGN KEY(Id_Modele_EPI) REFERENCES Modele_EPI(Id_Modele_EPI)
+);
+
+CREATE TABLE Attribution (
+    Id_Attribution  UUID DEFAULT gen_random_uuid(),
+    Id_Chauffeur    UUID NOT NULL,
+    Id_EPI          UUID NOT NULL,
+    date_Attribution DATE NOT NULL DEFAULT CURRENT_DATE,
+    date_Retour      DATE,
+    motif_Retour     VARCHAR(50),
+    etat_Epi         VARCHAR(50),
+    PRIMARY KEY(Id_Attribution),
+    FOREIGN KEY(Id_Chauffeur) REFERENCES Chauffeur(Id_Chauffeur),
+    FOREIGN KEY(Id_EPI) REFERENCES EPI(Id_EPI)
+);
+
+CREATE TABLE Historique_Stock (
+    Id_Historique    UUID DEFAULT gen_random_uuid(),
+    Id_Modele_EPI    UUID NOT NULL,
+    date_modification DATE NOT NULL DEFAULT CURRENT_DATE,
+    ancienne_valeur  INT NOT NULL,
+    nouvelle_valeur  INT NOT NULL,
+    motif            VARCHAR(255),
+    PRIMARY KEY(Id_Historique),
+    FOREIGN KEY(Id_Modele_EPI) REFERENCES Modele_EPI(Id_Modele_EPI)
+);
+
+CREATE TABLE Controle (
+    Id_Controle      UUID DEFAULT gen_random_uuid(),
+    Id_EPI           UUID NOT NULL,
+    date_controle    DATE NOT NULL,
+    resultat         VARCHAR(50) NOT NULL CHECK (resultat IN ('conforme', 'à_remplacer')),
+    commentaire      VARCHAR(255),
+    prochain_controle DATE NOT NULL,
+    PRIMARY KEY(Id_Controle),
+    FOREIGN KEY(Id_EPI) REFERENCES EPI(Id_EPI)
+);
