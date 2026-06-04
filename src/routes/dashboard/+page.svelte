@@ -5,7 +5,6 @@
     Package,
     Calendar,
     Users,
-    Clock,
     TrendingDown,
     TrendingUp,
     History,
@@ -106,7 +105,7 @@
         class="group relative bg-white rounded-4xl shadow-xl hover:shadow-2xl transition-all duration-500 border-2 border-red-100 overflow-hidden flex flex-col h-160"
       >
         <div class="p-8 bg-linear-to-br from-red-600 to-red-500 relative overflow-hidden">
-          <Clock class="absolute -right-4 -top-4 w-32 h-32 text-white/10 rotate-12" />
+          <TriangleAlert class="absolute -right-4 -top-4 w-32 h-32 text-white/10 rotate-12" />
           <div class="relative z-10 flex items-center justify-between">
             <div class="flex flex-col">
               <h3 class="text-2xl font-black text-white tracking-tight">Expirations</h3>
