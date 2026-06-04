@@ -252,11 +252,6 @@
 			</div>
 			<div>
 				<h1 class="text-3xl font-black text-blue-950 tracking-tight uppercase">Chauffeurs</h1>
-				<p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-					{stats.total} chauffeur{stats.total > 1 ? 's' : ''} enregistré{stats.total > 1
-						? 's'
-						: ''}
-				</p>
 			</div>
 		</div>
 		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
@@ -837,9 +832,9 @@
 				<div class="px-5 pb-6">
 					<details class="group">
 						<summary
-							class="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-slate-400 cursor-pointer select-none transition-colors list-none"
+							class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 hover:bg-slate-50 hover:border-slate-300 cursor-pointer select-none transition-colors list-none w-full"
 						>
-							<ArrowRightLeft class="w-3 h-3" />
+							<ArrowRightLeft class="w-3.5 h-3.5 shrink-0" />
 							Transférer tout le matériel
 						</summary>
 						<form
