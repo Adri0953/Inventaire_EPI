@@ -1,5 +1,6 @@
 <script lang="ts">
   import './layout.css';
+  import { resolve } from '$app/paths';
   import { page } from '$app/stores';
   import favicon from '$lib/assets/favicon.svg';
   import logo from '$lib/assets/logo.jpg';
@@ -18,14 +19,12 @@
 
     {#if data.session}
       <nav class="app-nav">
-        <a
-          href="/dashboard"
-          class="nav-link {$page.url.pathname === '/dashboard' ? 'active' : ''}"
-        >
+        <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+        <a href="/dashboard" class="nav-link {$page.url.pathname === '/dashboard' ? 'active' : ''}">
           Dashboard
         </a>
         <a
-          href="/chauffeurs"
+          href={resolve('/chauffeurs')}
           class="nav-link {$page.url.pathname.startsWith('/chauffeurs') ? 'active' : ''}"
         >
           Chauffeurs
