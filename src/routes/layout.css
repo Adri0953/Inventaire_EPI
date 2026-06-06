@@ -75,6 +75,35 @@ body {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nav-link {
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #64748b;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  transition: all 0.15s ease;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.nav-link:hover {
+  color: #1e3a8a;
+  background-color: #eff6ff;
+}
+
+.nav-link.active {
+  color: #1e3a8a;
+  background-color: #dbeafe;
+  font-weight: 800;
+}
+
 .app-main {
   flex-grow: 1;
   padding: 2rem;
