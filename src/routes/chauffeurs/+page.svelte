@@ -152,6 +152,18 @@
   });
 
   // ── Panel de détail ───────────────────────────────────────────────────
+  let showCreatePanel = $state(false);
+  let createPrenom = $state('');
+  let createNom = $state('');
+  let createActivite = $state('');
+
+  function openCreatePanel() {
+    showCreatePanel = true;
+    createPrenom = '';
+    createNom = '';
+    createActivite = '';
+  }
+
   let selectedDriverId = $state<string | null>(null);
   const selectedDriver = $derived(
     selectedDriverId
@@ -279,14 +291,13 @@
       </div>
     </div>
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-    <a
-      // eslint-disable-next-line svelte/no-navigation-without-resolve
-      href="/chauffeurs/nouveau"
+    <button
+      onclick={openCreatePanel}
       class="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-blue-950 text-white text-sm font-black hover:bg-blue-800 transition-colors shadow-lg"
     >
       <UserPlus class="w-4 h-4" />
       Nouveau chauffeur
-    </a>
+    </button>
   </div>
 
   <!-- Stats -->
@@ -503,6 +514,202 @@
     {/each}
   </div>
 </div>
+
+<!-- ── PANEL DE DÉTAIL ────────────────────────────────────────────────────── -->
+<!-- ── PANEL CRÉATION ─────────────────────────────────────────────────────── -->
+{#if showCreatePanel}
+  <button
+    transition:fade={{ duration: 200 }}
+    class="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]"
+    onclick={() => (showCreatePanel = false)}
+    aria-label="Fermer"
+  ></button>
+
+  <div
+    in:fly={{ x: 560, duration: 380, easing: quintOut }}
+    out:fly={{ x: 560, duration: 250, easing: cubicIn }}
+    class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-xl bg-white shadow-2xl flex flex-col overflow-hidden"
+  >
+    <!-- En-tête -->
+    <div class="p-6 bg-linear-to-br from-blue-950 to-blue-800 relative overflow-hidden shrink-0">
+      <UserPlus class="absolute -right-4 -bottom-4 w-32 h-32 text-white/5" />
+      <div class="relative z-10 flex items-start justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div
+            class="w-12 h-12 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center font-black text-white text-xl"
+          >
+            {#if createPrenom || createNom}
+              {(createPrenom[0] ?? '').toUpperCase()}{(createNom[0] ?? '').toUpperCase()}
+            {:else}
+              ?
+            {/if}
+          </div>
+          <div>
+            <h2 class="text-xl font-black text-white tracking-tight">
+              {createPrenom || createNom
+                ? `${createPrenom} ${createNom}`.trim()
+                : 'Nouveau chauffeur'}
+            </h2>
+            <p class="text-blue-200 text-xs font-bold mt-0.5">
+              {createActivite || 'Activité non renseignée'}
+            </p>
+          </div>
+        </div>
+        <button
+          onclick={() => (showCreatePanel = false)}
+          class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors shrink-0"
+        >
+          <X class="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Corps -->
+    <form
+      method="POST"
+      action="?/creer_chauffeur"
+      use:enhance={({ cancel }) => {
+        if (!createPrenom.trim() || !createNom.trim()) {
+          cancel();
+          return;
+        }
+        return ({ update }) => {
+          showCreatePanel = false;
+          update();
+        };
+      }}
+      class="flex-1 overflow-y-auto flex flex-col"
+    >
+      <div class="flex-1 p-6 space-y-6">
+        <!-- Identité -->
+        <div class="space-y-4">
+          <p class="text-[11px] font-black uppercase tracking-widest text-slate-400">Identité</p>
+
+          <div class="space-y-1.5">
+            <label
+              for="create-nom"
+              class="text-xs font-black uppercase tracking-widest text-slate-500"
+              >Nom <span class="text-red-400">*</span></label
+            >
+            <input
+              id="create-nom"
+              name="nom"
+              type="text"
+              required
+              autocomplete="family-name"
+              bind:value={createNom}
+              placeholder="Dupont"
+              class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-sm placeholder:text-slate-300
+                focus:outline-none focus:ring-2 focus:ring-blue-950/20 focus:border-blue-950 focus:bg-white transition-all"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label
+              for="create-prenom"
+              class="text-xs font-black uppercase tracking-widest text-slate-500"
+              >Prénom <span class="text-red-400">*</span></label
+            >
+            <input
+              id="create-prenom"
+              name="prenom"
+              type="text"
+              required
+              autocomplete="given-name"
+              bind:value={createPrenom}
+              placeholder="Jean"
+              class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-sm placeholder:text-slate-300
+                focus:outline-none focus:ring-2 focus:ring-blue-950/20 focus:border-blue-950 focus:bg-white transition-all"
+            />
+          </div>
+        </div>
+
+        <!-- Activité -->
+        <div class="space-y-3">
+          <p class="text-[11px] font-black uppercase tracking-widest text-slate-400">
+            Activité <span class="text-slate-300 font-medium normal-case tracking-normal"
+              >(optionnel)</span
+            >
+          </p>
+          <input type="hidden" name="activite" value={createActivite} />
+
+          <button
+            type="button"
+            onclick={() => (createActivite = '')}
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border-2 text-left transition-all
+              {createActivite === ''
+              ? 'border-slate-300 bg-slate-50'
+              : 'border-slate-100 hover:border-slate-200'}"
+          >
+            <div class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+              <span class="text-sm font-black text-slate-400">—</span>
+            </div>
+            <span
+              class="text-sm font-bold {createActivite === ''
+                ? 'text-slate-700'
+                : 'text-slate-400'}">Aucune</span
+            >
+            {#if createActivite === ''}<div
+                class="ml-auto w-2 h-2 rounded-full bg-slate-400"
+              ></div>{/if}
+          </button>
+
+          {#each ACTIVITES as act (act)}
+            <button
+              type="button"
+              onclick={() => (createActivite = act)}
+              class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border-2 text-left transition-all
+                {createActivite === act
+                ? 'border-indigo-400 bg-indigo-50'
+                : 'border-slate-100 hover:border-slate-200'}"
+            >
+              <div
+                class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 {createActivite ===
+                act
+                  ? 'bg-indigo-500'
+                  : 'bg-slate-100'}"
+              >
+                <Package
+                  class="w-4 h-4 {createActivite === act ? 'text-white' : 'text-slate-400'}"
+                />
+              </div>
+              <div class="flex-1 min-w-0">
+                <p
+                  class="text-sm font-bold {createActivite === act
+                    ? 'text-indigo-700'
+                    : 'text-slate-600'}"
+                >
+                  {act}
+                </p>
+                <p class="text-[11px] text-slate-400">{PRESETS[act]?.join(' · ') ?? ''}</p>
+              </div>
+              {#if createActivite === act}<div
+                  class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"
+                ></div>{/if}
+            </button>
+          {/each}
+        </div>
+      </div>
+
+      <!-- Pied -->
+      <div class="shrink-0 px-6 py-4 border-t border-slate-100 bg-white flex items-center gap-3">
+        <button
+          type="submit"
+          class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 text-white text-sm font-black hover:bg-emerald-700 transition-colors shadow-lg"
+        >
+          <UserPlus class="w-4 h-4" />Ajouter le chauffeur
+        </button>
+        <button
+          type="button"
+          onclick={() => (showCreatePanel = false)}
+          class="px-5 py-3 rounded-2xl border border-slate-200 text-slate-500 text-sm font-bold hover:bg-slate-50 transition-colors"
+        >
+          Annuler
+        </button>
+      </div>
+    </form>
+  </div>
+{/if}
 
 <!-- ── PANEL DE DÉTAIL ────────────────────────────────────────────────────── -->
 {#if selectedDriver}

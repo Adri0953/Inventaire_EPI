@@ -233,4 +233,18 @@ export const actions: Actions = {
     if (error) return fail(500, { error: 'Erreur lors de la modification' });
     return { success: true };
   },
+
+  creer_chauffeur: async ({ request }) => {
+    const formData = await request.formData();
+    const prenom = (formData.get('prenom') as string | null)?.trim();
+    const nom = (formData.get('nom') as string | null)?.trim();
+    const activite = (formData.get('activite') as string | null)?.trim() || null;
+
+    if (!prenom || !nom) return fail(400, { error: 'Prénom et nom requis' });
+
+    const { error } = await supabase.from('chauffeur').insert({ prenom, nom, activite });
+
+    if (error) return fail(500, { error: 'Erreur lors de la création' });
+    return { success: true };
+  },
 };
