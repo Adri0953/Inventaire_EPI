@@ -13,7 +13,6 @@
     X,
     Plus,
     Package,
-    ChevronRight,
     Save,
     Clock,
     Wrench,
@@ -479,16 +478,8 @@
         <div
           role="none"
           onclick={(e) => e.stopPropagation()}
-          class="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+          class="flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          <button
-            onclick={() => openDriver(c.id_chauffeur)}
-            class="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 transition-colors"
-            title="Voir la fiche"
-          >
-            <ChevronRight class="w-4 h-4" />
-          </button>
-
           <form
             method="POST"
             action="?/supprimer"
@@ -686,7 +677,7 @@
             {@const days = epi.date_expiration ? daysUntil(epi.date_expiration) : null}
             {@const controlDays = epi.prochain_controle ? daysUntil(epi.prochain_controle) : null}
             <div
-              class="rounded-2xl border bg-white shadow-sm overflow-hidden
+              class="rounded-2xl border bg-white shadow-sm
                 {status === 'expired' || status === 'control_overdue'
                 ? 'border-red-200'
                 : status === 'expiring_soon' || status === 'control_soon'
@@ -695,7 +686,7 @@
             >
               <div class="flex">
                 <div
-                  class="w-1 shrink-0
+                  class="w-1 shrink-0 rounded-l-2xl
                     {status === 'expired'
                     ? 'bg-red-500'
                     : status === 'control_overdue'
