@@ -35,6 +35,12 @@
         >
           EPI
         </a>
+        <a
+          href={resolve('/attributions')}
+          class="nav-link {$page.url.pathname.startsWith('/attributions') ? 'active' : ''}"
+        >
+          Attributions
+        </a>
       </nav>
 
       <form method="POST" action="/?/logout">

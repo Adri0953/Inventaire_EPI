@@ -173,7 +173,6 @@
       </div>
       <div>
         <h1 class="text-3xl font-black text-violet-900 tracking-tight uppercase">EPI</h1>
-        <p class="text-sm text-slate-400 font-medium">Équipements de Protection Individuelle</p>
       </div>
     </div>
     <button
