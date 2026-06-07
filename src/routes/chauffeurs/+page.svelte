@@ -283,17 +283,17 @@
   <!-- Header -->
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-4">
-      <div class="p-3 rounded-2xl bg-blue-950 shadow-lg">
+      <div class="p-3 rounded-2xl bg-blue-500 shadow-lg">
         <Users class="w-6 h-6 text-white" />
       </div>
       <div>
-        <h1 class="text-3xl font-black text-blue-950 tracking-tight uppercase">Chauffeurs</h1>
+        <h1 class="text-3xl font-black text-blue-600 tracking-tight uppercase">Chauffeurs</h1>
       </div>
     </div>
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
     <button
       onclick={openCreatePanel}
-      class="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-blue-950 text-white text-sm font-black hover:bg-blue-800 transition-colors shadow-lg"
+      class="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-blue-500 text-white text-sm font-black hover:bg-blue-400 transition-colors shadow-lg"
     >
       <UserPlus class="w-4 h-4" />
       Nouveau chauffeur
@@ -429,7 +429,7 @@
         <!-- Nom -->
         <div class="flex items-center gap-3 min-w-0">
           <div
-            class="w-9 h-9 rounded-xl bg-blue-950 flex items-center justify-center font-black text-white text-sm shrink-0"
+            class="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center font-black text-white text-sm shrink-0"
           >
             {c.nom[0]?.toUpperCase()}
           </div>
@@ -531,7 +531,7 @@
     class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-xl bg-white shadow-2xl flex flex-col overflow-hidden"
   >
     <!-- En-tête -->
-    <div class="p-6 bg-linear-to-br from-blue-950 to-blue-800 relative overflow-hidden shrink-0">
+    <div class="p-6 bg-linear-to-br from-blue-600 to-blue-400 relative overflow-hidden shrink-0">
       <UserPlus class="absolute -right-4 -bottom-4 w-32 h-32 text-white/5" />
       <div class="relative z-10 flex items-start justify-between gap-4">
         <div class="flex items-center gap-4">
@@ -600,7 +600,7 @@
               bind:value={createNom}
               placeholder="Dupont"
               class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-sm placeholder:text-slate-300
-                focus:outline-none focus:ring-2 focus:ring-blue-950/20 focus:border-blue-950 focus:bg-white transition-all"
+                focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
             />
           </div>
 
@@ -619,7 +619,7 @@
               bind:value={createPrenom}
               placeholder="Jean"
               class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-sm placeholder:text-slate-300
-                focus:outline-none focus:ring-2 focus:ring-blue-950/20 focus:border-blue-950 focus:bg-white transition-all"
+                focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
             />
           </div>
         </div>
@@ -728,7 +728,7 @@
     class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-xl bg-white shadow-2xl flex flex-col overflow-hidden"
   >
     <!-- En-tête du panel -->
-    <div class="p-6 bg-linear-to-br from-blue-950 to-blue-800 relative overflow-hidden shrink-0">
+    <div class="p-6 bg-linear-to-br from-blue-600 to-blue-400 relative overflow-hidden shrink-0">
       <Users class="absolute -right-4 -bottom-4 w-32 h-32 text-white/5" />
       <div class="relative z-10 flex items-start justify-between gap-4">
         <div class="flex items-center gap-4">
@@ -851,7 +851,7 @@
             <div class="flex gap-2 pt-1">
               <button
                 type="submit"
-                class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-950 text-white text-xs font-black hover:bg-blue-800 transition-colors"
+                class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-500 text-white text-xs font-black hover:bg-blue-400 transition-colors"
               >
                 <Save class="w-3.5 h-3.5" />Enregistrer
               </button>
