@@ -29,6 +29,12 @@
         >
           Chauffeurs
         </a>
+        <a
+          href={resolve('/epi')}
+          class="nav-link {$page.url.pathname.startsWith('/epi') ? 'active' : ''}"
+        >
+          EPI
+        </a>
       </nav>
 
       <form method="POST" action="/?/logout">
