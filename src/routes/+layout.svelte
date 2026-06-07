@@ -2,9 +2,31 @@
   import './layout.css';
   import { resolve } from '$app/paths';
   import { page } from '$app/stores';
+  import { goto, onNavigate } from '$app/navigation';
+  import { ChevronLeft, ChevronRight } from 'lucide-svelte';
+  import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
+  import { ROUTES } from '$lib/nav';
   import favicon from '$lib/assets/favicon.svg';
   import logo from '$lib/assets/logo.jpg';
   export let data;
+
+  $: currentIndex = ROUTES.findIndex((r) => $page.url.pathname.startsWith(r));
+  $: prevRoute = currentIndex > 0 ? ROUTES[currentIndex - 1] : null;
+  $: nextRoute = currentIndex < ROUTES.length - 1 ? ROUTES[currentIndex + 1] : null;
+
+  onNavigate((nav) => {
+    if (!document.startViewTransition) return;
+    const toIndex = ROUTES.findIndex((r) => nav.to?.url.pathname.startsWith(r));
+    const fromIndex = ROUTES.findIndex((r) => nav.from?.url.pathname.startsWith(r));
+    document.documentElement.dataset.navDir =
+      toIndex >= 0 && fromIndex >= 0 && fromIndex > toIndex ? 'backward' : 'forward';
+    return new Promise((resolve) => {
+      document.startViewTransition(async () => {
+        resolve();
+        await nav.complete;
+      });
+    });
+  });
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
@@ -49,7 +71,30 @@
     {/if}
   </header>
 
+  {#if data.session && currentIndex >= 0}
+    {#if prevRoute}
+      <button
+        onclick={() => goto(prevRoute)}
+        class="fixed left-2 top-1/2 z-50 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-slate-500 opacity-40 shadow-md backdrop-blur-sm transition-opacity hover:opacity-100"
+        aria-label="Page précédente"
+      >
+        <ChevronLeft class="h-5 w-5" />
+      </button>
+    {/if}
+    {#if nextRoute}
+      <button
+        onclick={() => goto(nextRoute)}
+        class="fixed right-2 top-1/2 z-50 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-slate-500 opacity-40 shadow-md backdrop-blur-sm transition-opacity hover:opacity-100"
+        aria-label="Page suivante"
+      >
+        <ChevronRight class="h-5 w-5" />
+      </button>
+    {/if}
+  {/if}
+
   <main class="app-main">
     <slot />
   </main>
 </div>
+
+<ConfirmModal />

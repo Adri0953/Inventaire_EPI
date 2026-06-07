@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PageData } from './$types';
   import { enhance } from '$app/forms';
+  import { page } from '$app/stores';
   import {
     Users,
     ShieldCheck,
@@ -22,6 +23,8 @@
     ChevronDown,
     Ellipsis,
   } from 'lucide-svelte';
+  import { goto } from '$app/navigation';
+  import { confirmAction } from '$lib/stores/confirm';
   import { fly, fade } from 'svelte/transition';
   import { quintOut, cubicIn } from 'svelte/easing';
 
@@ -102,6 +105,7 @@
   // ── Filtres & tri ────────────────────────────────────────────────────
   let search = $state('');
   let filterStatus = $state('');
+  let filterActivite = $state('');
 
   type SortCol = 'nom' | 'activite' | 'epis' | 'statut' | 'expiration';
   let sortCol = $state<SortCol>('nom');
@@ -129,6 +133,7 @@
       const name = `${c.prenom} ${c.nom}`.toLowerCase();
       if (search && !name.includes(search.toLowerCase())) return false;
       if (filterStatus && getEquipmentStatus(c) !== filterStatus) return false;
+      if (filterActivite && c.activite !== filterActivite) return false;
       return true;
     });
 
@@ -181,6 +186,17 @@
     epiTransferOpen = {};
     epiMenuOpen = {};
   }
+
+  // Ouvre automatiquement la fiche d'un chauffeur si l'URL contient ?fiche=<id>
+  // (utilisé par le bouton « Voir la fiche » de la page Attributions).
+  let handledFiche = $state<string | null>(null);
+  $effect(() => {
+    const fiche = $page.url.searchParams.get('fiche');
+    if (fiche && fiche !== handledFiche && data.chauffeurs.some((c) => c.id_chauffeur === fiche)) {
+      handledFiche = fiche;
+      openDriver(fiche);
+    }
+  });
 
   // ── Mode édition ──────────────────────────────────────────────────────
   let editMode = $state(false);
@@ -290,13 +306,11 @@
         <h1 class="text-3xl font-black text-blue-600 tracking-tight uppercase">Chauffeurs</h1>
       </div>
     </div>
-    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
     <button
       onclick={openCreatePanel}
-      class="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-blue-500 text-white text-sm font-black hover:bg-blue-400 transition-colors shadow-lg"
+      class="px-5 py-2.5 rounded-2xl bg-blue-500 text-white text-sm font-black hover:bg-blue-400 transition-colors shadow-lg"
     >
-      <UserPlus class="w-4 h-4" />
-      Nouveau chauffeur
+      Ajouter un chauffeur
     </button>
   </div>
 
@@ -361,13 +375,21 @@
       placeholder="Rechercher un chauffeur…"
       class="flex-1 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
     />
-    {#if filterStatus}
+    <select
+      bind:value={filterActivite}
+      class="px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 min-w-48"
+    >
+      <option value="">Toutes les activités</option>
+      {#each ACTIVITES as act (act)}
+        <option value={act}>{act}</option>
+      {/each}
+    </select>
+    {#if filterStatus || filterActivite}
       <button
-        onclick={() => (filterStatus = '')}
+        onclick={() => { filterStatus = ''; filterActivite = ''; }}
         class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-100 text-blue-700 text-sm font-bold hover:bg-blue-200 transition-colors"
       >
-        <X class="w-3.5 h-3.5" />
-        Effacer le filtre
+        <X class="w-3.5 h-3.5" />Effacer les filtres
       </button>
     {/if}
   </div>
@@ -423,7 +445,7 @@
         tabindex="0"
         onclick={() => openDriver(c.id_chauffeur)}
         onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && openDriver(c.id_chauffeur)}
-        class="cursor-pointer grid items-center gap-4 px-6 py-4 border-b border-slate-50 hover:bg-blue-50/40 transition-colors group"
+        class="cursor-pointer grid items-center gap-4 px-6 py-4 border-b border-slate-100 hover:bg-blue-50/40 transition-colors group"
         style="grid-template-columns: 1fr 160px 80px 110px 130px 130px"
       >
         <!-- Nom -->
@@ -439,7 +461,15 @@
         </div>
 
         <!-- Activité -->
-        <p class="text-xs text-slate-500 font-medium truncate text-center">{c.activite ?? '—'}</p>
+        <div class="flex justify-center">
+          {#if c.activite}
+            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-xs font-semibold text-slate-600 truncate max-w-full">
+              {c.activite}
+            </span>
+          {:else}
+            <span class="text-xs text-slate-300">—</span>
+          {/if}
+        </div>
 
         <!-- Nb EPI -->
         <div class="flex justify-center">
@@ -455,19 +485,19 @@
         <div class="flex justify-center">
           {#if status === 'complet'}
             <span
-              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-[10px] font-black text-emerald-700 uppercase"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700"
             >
               <ShieldCheck class="w-3 h-3" />Complet
             </span>
           {:else if status === 'incomplet'}
             <span
-              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-200 text-[10px] font-black text-amber-700 uppercase"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-700"
             >
               <ShieldAlert class="w-3 h-3" />Incomplet
             </span>
           {:else}
             <span
-              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-red-50 border border-red-200 text-[10px] font-black text-red-600 uppercase"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-xs font-semibold text-red-600"
             >
               <ShieldX class="w-3 h-3" />Non équipé
             </span>
@@ -475,13 +505,21 @@
         </div>
 
         <!-- Alertes -->
-        <div class="flex justify-center">
+        <div class="flex items-center justify-center gap-1.5">
           {#if getAlertLevel(c) === 'red'}
-            <TriangleAlert class="w-4 h-4 text-red-600" />
+            <span
+              class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-red-50 border border-red-200 text-[11px] font-semibold text-red-600"
+            >
+              <TriangleAlert class="w-3 h-3" />Urgent
+            </span>
           {:else if getAlertLevel(c) === 'orange'}
-            <TriangleAlert class="w-4 h-4 text-orange-400" />
+            <span
+              class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 border border-amber-200 text-[11px] font-semibold text-amber-600"
+            >
+              <Clock class="w-3 h-3" />Bientôt
+            </span>
           {:else}
-            <span class="text-[10px] font-bold text-slate-300">—</span>
+            <span class="text-xs text-slate-300">—</span>
           {/if}
         </div>
 
@@ -494,16 +532,21 @@
           <form
             method="POST"
             action="?/supprimer"
-            use:enhance={() => {
-              if (!confirm(`Supprimer ${c.prenom} ${c.nom} ? Ses EPI seront libérés.`))
-                return () => {};
+            use:enhance={async ({ cancel }) => {
+              const ok = await confirmAction({
+                title: 'Supprimer le chauffeur',
+                message: `Supprimer ${c.nom} ${c.prenom} ? Ses EPI seront libérés.`,
+                confirmLabel: 'Supprimer',
+                confirmVariant: 'danger',
+              });
+              if (!ok) { cancel(); return; }
               return ({ update }) => update();
             }}
           >
             <input type="hidden" name="id_chauffeur" value={c.id_chauffeur} />
             <button
               type="submit"
-              class="p-1.5 rounded-lg hover:bg-red-100 text-red-500 transition-colors"
+              class="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"
               title="Supprimer"
             >
               <Trash2 class="w-4 h-4" />
@@ -869,9 +912,20 @@
 
       <!-- ── Liste des EPI ─────────────────────────────────────────── -->
       <div class="p-5 space-y-4">
-        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">
-          EPI attribués ({selectedDriver.epis.length})
-        </p>
+        <div class="flex items-center justify-between">
+          <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">
+            EPI attribués ({selectedDriver.epis.length})
+          </p>
+          {#if getEquipmentStatus(selectedDriver) !== 'complet'}
+            <button
+              type="button"
+              onclick={() => goto('/attributions?chauffeur=' + selectedDriver.id_chauffeur)}
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-black hover:bg-emerald-700 transition-colors"
+            >
+              <Plus class="w-3.5 h-3.5" />Équiper
+            </button>
+          {/if}
+        </div>
 
         {#if selectedDriver.epis.length === 0}
           <div class="flex flex-col items-center gap-2 py-8 opacity-30">
@@ -892,19 +946,6 @@
                   : 'border-slate-100'}"
             >
               <div class="flex">
-                <div
-                  class="w-1 shrink-0 rounded-l-2xl
-                    {status === 'expired'
-                    ? 'bg-red-500'
-                    : status === 'control_overdue'
-                      ? 'bg-red-800'
-                      : status === 'expiring_soon'
-                        ? 'bg-orange-400'
-                        : status === 'control_soon'
-                          ? 'bg-amber-400'
-                          : 'bg-emerald-400'}"
-                ></div>
-
                 <div class="flex-1 min-w-0">
                   <div class="px-3 py-3 flex items-start gap-2">
                     <div class="flex-1 min-w-0">
@@ -1017,11 +1058,14 @@
                             <form
                               method="POST"
                               action="?/retirer_epi"
-                              use:enhance={({ cancel }) => {
-                                if (!confirm(`Retirer "${epi.designation}" de ce chauffeur ?`)) {
-                                  cancel();
-                                  return;
-                                }
+                              use:enhance={async ({ cancel }) => {
+                                const ok = await confirmAction({
+                                  title: "Retirer l'EPI",
+                                  message: `Retirer "${epi.designation}" de ce chauffeur ?`,
+                                  confirmLabel: 'Retirer',
+                                  confirmVariant: 'danger',
+                                });
+                                if (!ok) { cancel(); return; }
                                 return ({ update }) => {
                                   epiMenuOpen = {};
                                   update();
@@ -1044,11 +1088,14 @@
                             <form
                               method="POST"
                               action="?/hors_service"
-                              use:enhance={({ cancel }) => {
-                                if (!confirm(`Marquer "${epi.designation}" comme hors service ?`)) {
-                                  cancel();
-                                  return;
-                                }
+                              use:enhance={async ({ cancel }) => {
+                                const ok = await confirmAction({
+                                  title: 'Mettre hors service',
+                                  message: `Marquer "${epi.designation}" comme hors service ?`,
+                                  confirmLabel: 'Confirmer',
+                                  confirmVariant: 'danger',
+                                });
+                                if (!ok) { cancel(); return; }
                                 return ({ update }) => {
                                   epiMenuOpen = {};
                                   update();
@@ -1242,20 +1289,19 @@
             <form
               method="POST"
               action="?/transferer_tout"
-              use:enhance={({ cancel }) => {
+              use:enhance={async ({ cancel }) => {
                 if (!transferAllTarget) {
                   cancel();
                   return;
                 }
                 const dest = data.chauffeurs.find((c) => c.id_chauffeur === transferAllTarget);
-                if (
-                  !confirm(
-                    `Transférer tous les EPI de ${selectedDriver?.nom} ${selectedDriver?.prenom} vers ${dest?.nom} ${dest?.prenom} ?`,
-                  )
-                ) {
-                  cancel();
-                  return;
-                }
+                const ok = await confirmAction({
+                  title: 'Transférer tout le matériel',
+                  message: `Transférer tous les EPI de ${selectedDriver?.nom} ${selectedDriver?.prenom} vers ${dest?.nom} ${dest?.prenom} ?`,
+                  confirmLabel: 'Transférer',
+                  confirmVariant: 'danger',
+                });
+                if (!ok) { cancel(); return; }
                 return ({ update }) => {
                   transferAllTarget = '';
                   update();

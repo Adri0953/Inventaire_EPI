@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { PageData } from './$types';
   import { enhance } from '$app/forms';
+  import { page } from '$app/stores';
+  import { confirmAction } from '$lib/stores/confirm';
   import {
     Package,
     ShieldCheck,
@@ -137,6 +139,17 @@
     attribuerChauffeurId = '';
   }
 
+  // Ouvre automatiquement la fiche d'un EPI si l'URL contient ?fiche=<id>
+  // (utilisé par le bouton « Voir la fiche » de la page Attributions).
+  let handledFiche = $state<string | null>(null);
+  $effect(() => {
+    const fiche = $page.url.searchParams.get('fiche');
+    if (fiche && fiche !== handledFiche && data.epis.some((e) => e.id_epi === fiche)) {
+      handledFiche = fiche;
+      openEpi(fiche);
+    }
+  });
+
   let confirmDelete = $state(false);
   let showAttribuerForm = $state(false);
   let showControleForm = $state(false);
@@ -187,59 +200,59 @@
   <!-- Stats -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
     <div
-      class="relative rounded-3xl px-5 py-4 overflow-hidden shadow-xl border-2 border-violet-400 flex items-center gap-4"
-      style="background: linear-gradient(135deg, #6d28d9 0%, #a78bfa 100%)"
+      class="relative rounded-3xl px-5 py-4 overflow-hidden shadow-xl border-2 border-violet-700 flex items-center gap-4"
+      style="background: linear-gradient(90deg, #5b21b6 0%, #6d28d9 100%)"
     >
       <Package class="absolute -right-3 -bottom-3 w-20 h-20 text-white/10" />
       <span class="text-4xl font-black text-white tabular-nums leading-none shrink-0"
         >{stats.total}</span
       >
-      <p class="text-violet-100 text-sm font-bold leading-snug">EPI au total</p>
+      <p class="text-violet-200 text-sm font-bold leading-snug">EPI au total</p>
     </div>
 
     <button
       onclick={() => (filterStatut = filterStatut === 'disponible' ? '' : 'disponible')}
       class="relative rounded-3xl px-5 py-4 overflow-hidden shadow-xl border-2 text-left transition-all flex items-center gap-4
         {filterStatut === 'disponible'
-        ? 'border-emerald-300 ring-2 ring-emerald-300'
-        : 'border-emerald-400'}"
-      style="background: linear-gradient(135deg, #059669 0%, #34d399 100%)"
+        ? 'border-violet-600 ring-2 ring-violet-400'
+        : 'border-violet-500'}"
+      style="background: linear-gradient(90deg, #7c3aed 0%, #8b5cf6 100%)"
     >
       <ShieldCheck class="absolute -right-3 -bottom-3 w-20 h-20 text-white/10" />
       <span class="text-4xl font-black text-white tabular-nums leading-none shrink-0"
         >{stats.disponibles}</span
       >
-      <p class="text-emerald-100 text-sm font-bold leading-snug">Disponibles</p>
+      <p class="text-violet-100 text-sm font-bold leading-snug">Disponibles</p>
     </button>
 
     <button
       onclick={() => (filterStatut = filterStatut === 'attribué' ? '' : 'attribué')}
       class="relative rounded-3xl px-5 py-4 overflow-hidden shadow-xl border-2 text-left transition-all flex items-center gap-4
         {filterStatut === 'attribué'
-        ? 'border-indigo-300 ring-2 ring-indigo-300'
-        : 'border-indigo-400'}"
-      style="background: linear-gradient(135deg, #4338ca 0%, #818cf8 100%)"
+        ? 'border-violet-400 ring-2 ring-violet-300'
+        : 'border-violet-300'}"
+      style="background: linear-gradient(90deg, #a78bfa 0%, #c4b5fd 100%)"
     >
-      <UserCheck class="absolute -right-3 -bottom-3 w-20 h-20 text-white/10" />
-      <span class="text-4xl font-black text-white tabular-nums leading-none shrink-0"
+      <UserCheck class="absolute -right-3 -bottom-3 w-20 h-20 text-violet-600/20" />
+      <span class="text-4xl font-black text-violet-900 tabular-nums leading-none shrink-0"
         >{stats.attribues}</span
       >
-      <p class="text-indigo-100 text-sm font-bold leading-snug">Attribués</p>
+      <p class="text-violet-800 text-sm font-bold leading-snug">Attribués</p>
     </button>
 
     <button
       onclick={() => (filterStatut = filterStatut === 'hors_service' ? '' : 'hors_service')}
       class="relative rounded-3xl px-5 py-4 overflow-hidden shadow-xl border-2 text-left transition-all flex items-center gap-4
         {filterStatut === 'hors_service'
-        ? 'border-rose-300 ring-2 ring-rose-300'
-        : 'border-rose-400'}"
-      style="background: linear-gradient(135deg, #e11d48 0%, #fb7185 100%)"
+        ? 'border-violet-300 ring-2 ring-violet-200'
+        : 'border-violet-200'}"
+      style="background: linear-gradient(90deg, #ddd6fe 0%, #ede9fe 100%)"
     >
-      <ShieldX class="absolute -right-3 -bottom-3 w-20 h-20 text-white/10" />
-      <span class="text-4xl font-black text-white tabular-nums leading-none shrink-0"
+      <ShieldX class="absolute -right-3 -bottom-3 w-20 h-20 text-violet-300/40" />
+      <span class="text-4xl font-black text-violet-900 tabular-nums leading-none shrink-0"
         >{stats.horsService}</span
       >
-      <p class="text-rose-100 text-sm font-bold leading-snug">Hors service</p>
+      <p class="text-violet-600 text-sm font-bold leading-snug">Hors service</p>
     </button>
   </div>
 
@@ -413,8 +426,14 @@
           <form
             method="POST"
             action="?/supprimer_epi"
-            use:enhance={() => {
-              if (!confirm(`Supprimer "${epi.designation}" ?`)) return () => {};
+            use:enhance={async ({ cancel }) => {
+              const ok = await confirmAction({
+                title: "Supprimer l'EPI",
+                message: `Supprimer "${epi.designation}" ? Cette action est irréversible.`,
+                confirmLabel: 'Supprimer',
+                confirmVariant: 'danger',
+              });
+              if (!ok) { cancel(); return; }
               return ({ update }) => update();
             }}
           >
@@ -545,11 +564,14 @@
               <form
                 method="POST"
                 action="?/retirer_epi"
-                use:enhance={({ cancel }) => {
-                  if (!confirm(`Retirer "${selectedEpi?.designation}" du chauffeur ?`)) {
-                    cancel();
-                    return;
-                  }
+                use:enhance={async ({ cancel }) => {
+                  const ok = await confirmAction({
+                    title: "Retirer l'EPI",
+                    message: `Retirer "${selectedEpi?.designation}" du chauffeur ?`,
+                    confirmLabel: 'Retirer',
+                    confirmVariant: 'danger',
+                  });
+                  if (!ok) { cancel(); return; }
                   return ({ update }) => update();
                 }}
               >
@@ -854,11 +876,14 @@
           <form
             method="POST"
             action="?/hors_service"
-            use:enhance={({ cancel }) => {
-              if (!confirm(`Marquer "${selectedEpi?.designation}" comme hors service ?`)) {
-                cancel();
-                return;
-              }
+            use:enhance={async ({ cancel }) => {
+              const ok = await confirmAction({
+                title: 'Mettre hors service',
+                message: `Marquer "${selectedEpi?.designation}" comme hors service ?`,
+                confirmLabel: 'Confirmer',
+                confirmVariant: 'danger',
+              });
+              if (!ok) { cancel(); return; }
               return ({ update }) => update();
             }}
           >
