@@ -200,7 +200,9 @@
     <button
       onclick={() => (filterStatut = filterStatut === 'disponible' ? '' : 'disponible')}
       class="relative rounded-3xl px-5 py-4 overflow-hidden shadow-xl border-2 text-left transition-all flex items-center gap-4
-        {filterStatut === 'disponible' ? 'border-emerald-300 ring-2 ring-emerald-300' : 'border-emerald-400'}"
+        {filterStatut === 'disponible'
+        ? 'border-emerald-300 ring-2 ring-emerald-300'
+        : 'border-emerald-400'}"
       style="background: linear-gradient(135deg, #059669 0%, #34d399 100%)"
     >
       <ShieldCheck class="absolute -right-3 -bottom-3 w-20 h-20 text-white/10" />
@@ -213,7 +215,9 @@
     <button
       onclick={() => (filterStatut = filterStatut === 'attribué' ? '' : 'attribué')}
       class="relative rounded-3xl px-5 py-4 overflow-hidden shadow-xl border-2 text-left transition-all flex items-center gap-4
-        {filterStatut === 'attribué' ? 'border-indigo-300 ring-2 ring-indigo-300' : 'border-indigo-400'}"
+        {filterStatut === 'attribué'
+        ? 'border-indigo-300 ring-2 ring-indigo-300'
+        : 'border-indigo-400'}"
       style="background: linear-gradient(135deg, #4338ca 0%, #818cf8 100%)"
     >
       <UserCheck class="absolute -right-3 -bottom-3 w-20 h-20 text-white/10" />
@@ -226,7 +230,9 @@
     <button
       onclick={() => (filterStatut = filterStatut === 'hors_service' ? '' : 'hors_service')}
       class="relative rounded-3xl px-5 py-4 overflow-hidden shadow-xl border-2 text-left transition-all flex items-center gap-4
-        {filterStatut === 'hors_service' ? 'border-rose-300 ring-2 ring-rose-300' : 'border-rose-400'}"
+        {filterStatut === 'hors_service'
+        ? 'border-rose-300 ring-2 ring-rose-300'
+        : 'border-rose-400'}"
       style="background: linear-gradient(135deg, #e11d48 0%, #fb7185 100%)"
     >
       <ShieldX class="absolute -right-3 -bottom-3 w-20 h-20 text-white/10" />
@@ -336,7 +342,9 @@
         <!-- Taille -->
         <div class="flex justify-center">
           {#if epi.taille}
-            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-xs font-semibold text-slate-600">
+            <span
+              class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-xs font-semibold text-slate-600"
+            >
               {epi.taille}
             </span>
           {:else}
@@ -347,15 +355,21 @@
         <!-- Statut -->
         <div class="flex justify-center">
           {#if epi.statut === 'disponible'}
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700">
+            <span
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700"
+            >
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Disponible
             </span>
           {:else if epi.statut === 'attribué'}
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-50 border border-violet-200 text-xs font-semibold text-violet-700">
+            <span
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-50 border border-violet-200 text-xs font-semibold text-violet-700"
+            >
               <UserCheck class="w-3 h-3" />Attribué
             </span>
           {:else}
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-500">
+            <span
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-500"
+            >
               <ShieldX class="w-3 h-3" />Hors service
             </span>
           {/if}
@@ -374,11 +388,15 @@
         <!-- Alertes -->
         <div class="flex items-center justify-center gap-1.5">
           {#if alert === 'expired' || alert === 'control_overdue'}
-            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-red-50 border border-red-200 text-[11px] font-semibold text-red-600">
+            <span
+              class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-red-50 border border-red-200 text-[11px] font-semibold text-red-600"
+            >
               <TriangleAlert class="w-3 h-3" />Urgent
             </span>
           {:else if alert === 'expiring_soon' || alert === 'control_soon'}
-            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 border border-amber-200 text-[11px] font-semibold text-amber-600">
+            <span
+              class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 border border-amber-200 text-[11px] font-semibold text-amber-600"
+            >
               <Clock class="w-3 h-3" />Bientôt
             </span>
           {:else}
@@ -430,15 +448,21 @@
     class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-120 bg-white shadow-2xl flex flex-col overflow-hidden"
   >
     <!-- En-tête -->
-    <div class="p-6 bg-linear-to-br from-violet-900 to-violet-700 relative overflow-hidden shrink-0">
+    <div
+      class="p-6 bg-linear-to-br from-violet-900 to-violet-700 relative overflow-hidden shrink-0"
+    >
       <Package class="absolute -right-4 -bottom-4 w-32 h-32 text-white/5" />
       <div class="relative z-10 flex items-start justify-between gap-4 mb-5">
         <div class="flex items-center gap-3.5">
-          <div class="w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+          <div
+            class="w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0"
+          >
             <Package class="w-5 h-5 text-white" />
           </div>
           <div class="min-w-0">
-            <h2 class="text-lg font-bold text-white leading-tight truncate">{selectedEpi.designation}</h2>
+            <h2 class="text-lg font-bold text-white leading-tight truncate">
+              {selectedEpi.designation}
+            </h2>
             <p class="text-violet-300 text-xs mt-0.5 uppercase tracking-wider">
               {selectedEpi.type}{selectedEpi.taille ? ` · ${selectedEpi.taille}` : ''}
             </p>
@@ -455,15 +479,21 @@
       <!-- Badges statut + alertes -->
       <div class="relative z-10 flex items-center gap-2 flex-wrap">
         {#if selectedEpi.statut === 'disponible'}
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-semibold">
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-semibold"
+          >
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>Disponible
           </span>
         {:else if selectedEpi.statut === 'attribué'}
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 text-[11px] font-semibold">
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 text-[11px] font-semibold"
+          >
             <UserCheck class="w-3 h-3 shrink-0" />Attribué
           </span>
         {:else}
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-300 text-slate-600 text-[11px] font-semibold">
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-300 text-slate-600 text-[11px] font-semibold"
+          >
             <ShieldX class="w-3 h-3 shrink-0" />Hors service
           </span>
         {/if}
@@ -473,21 +503,26 @@
           <span
             class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold
               {expAlert === 'expired'
-                ? 'bg-red-50 border border-red-200 text-red-600'
-                : expAlert === 'expiring_soon'
-                  ? 'bg-amber-50 border border-amber-200 text-amber-700'
-                  : 'bg-slate-100 border border-slate-200 text-slate-500'}"
+              ? 'bg-red-50 border border-red-200 text-red-600'
+              : expAlert === 'expiring_soon'
+                ? 'bg-amber-50 border border-amber-200 text-amber-700'
+                : 'bg-slate-100 border border-slate-200 text-slate-500'}"
           >
-            <Clock class="w-3 h-3 shrink-0" />{expAlert === 'expired' ? 'Expiré le' : 'Exp.'} {formatDate(selectedEpi.date_expiration)}
+            <Clock class="w-3 h-3 shrink-0" />{expAlert === 'expired' ? 'Expiré le' : 'Exp.'}
+            {formatDate(selectedEpi.date_expiration)}
           </span>
         {/if}
 
         {#if ctrlDays !== null && ctrlDays < 0}
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[11px] font-semibold">
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[11px] font-semibold"
+          >
             <Wrench class="w-3 h-3 shrink-0" />Ctrl. dépassé
           </span>
         {:else if ctrlDays !== null && ctrlDays <= 30}
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-600 text-[11px] font-semibold">
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-600 text-[11px] font-semibold"
+          >
             <Wrench class="w-3 h-3 shrink-0" />Ctrl. J-{ctrlDays}
           </span>
         {/if}
@@ -497,13 +532,14 @@
     <!-- Corps scrollable -->
     <div class="flex-1 overflow-y-auto bg-slate-50/60">
       <div class="p-4 space-y-3">
-
         <!-- ── Carte Attribution ─────────────────────────────────── -->
         <div class="bg-white rounded-xl border-2 border-blue-200 overflow-hidden">
           <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100">
             <div class="flex items-center gap-2">
               <UserCheck class="w-3.5 h-3.5 text-blue-500" />
-              <span class="text-[11px] font-semibold text-blue-600 uppercase tracking-widest">Attribution</span>
+              <span class="text-[11px] font-semibold text-blue-600 uppercase tracking-widest"
+                >Attribution</span
+              >
             </div>
             {#if selectedEpi.statut === 'attribué' && activeAttr}
               <form
@@ -532,14 +568,20 @@
           <div class="p-4">
             {#if activeAttr}
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-100 border-2 border-blue-300 flex items-center justify-center font-bold text-blue-600 text-sm shrink-0">
+                <div
+                  class="w-10 h-10 rounded-xl bg-blue-100 border-2 border-blue-300 flex items-center justify-center font-bold text-blue-600 text-sm shrink-0"
+                >
                   {activeAttr.chauffeur_nom[0]?.toUpperCase()}
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="font-semibold text-sm text-slate-900">{activeAttr.chauffeur_nom}</p>
-                  <p class="text-xs text-slate-400 mt-0.5">depuis le {formatDate(activeAttr.date_attribution)}</p>
+                  <p class="text-xs text-slate-400 mt-0.5">
+                    depuis le {formatDate(activeAttr.date_attribution)}
+                  </p>
                 </div>
-                <span class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 shrink-0">
+                <span
+                  class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 shrink-0"
+                >
                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Actif
                 </span>
               </div>
@@ -560,7 +602,10 @@
                     method="POST"
                     action="?/attribuer_epi"
                     use:enhance={({ cancel }) => {
-                      if (!attribuerChauffeurId) { cancel(); return; }
+                      if (!attribuerChauffeurId) {
+                        cancel();
+                        return;
+                      }
                       return ({ update }) => {
                         showAttribuerForm = false;
                         attribuerChauffeurId = '';
@@ -585,7 +630,8 @@
                       type="submit"
                       disabled={!attribuerChauffeurId}
                       class="px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-700 transition-colors disabled:opacity-40"
-                    >OK</button>
+                      >OK</button
+                    >
                   </form>
                 {/if}
               </div>
@@ -622,7 +668,8 @@
             <div class="flex items-center gap-2">
               <Wrench class="w-3.5 h-3.5 text-orange-500" />
               <span class="text-[11px] font-semibold text-orange-600 uppercase tracking-widest">
-                Contrôles{#if selectedEpi.controles.length > 0} ({selectedEpi.controles.length}){/if}
+                Contrôles{#if selectedEpi.controles.length > 0}
+                  ({selectedEpi.controles.length}){/if}
               </span>
             </div>
             <button
@@ -640,7 +687,10 @@
                 method="POST"
                 action="?/ajouter_controle"
                 use:enhance={({ cancel }) => {
-                  if (!controleResultat) { cancel(); return; }
+                  if (!controleResultat) {
+                    cancel();
+                    return;
+                  }
                   return ({ update }) => {
                     showControleForm = false;
                     controleResultat = '';
@@ -652,15 +702,17 @@
               >
                 <input type="hidden" name="id_epi" value={selectedEpi.id_epi} />
                 <input type="hidden" name="resultat" value={controleResultat} />
-                <p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Résultat du contrôle</p>
+                <p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                  Résultat du contrôle
+                </p>
                 <div class="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onclick={() => (controleResultat = 'conforme')}
                     class="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border-2 text-xs font-semibold transition-all
                       {controleResultat === 'conforme'
-                        ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
-                        : 'border-slate-200 bg-white text-slate-500 hover:border-emerald-200 hover:text-emerald-600'}"
+                      ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
+                      : 'border-slate-200 bg-white text-slate-500 hover:border-emerald-200 hover:text-emerald-600'}"
                   >
                     <CircleCheck class="w-3.5 h-3.5" />Conforme
                   </button>
@@ -669,8 +721,8 @@
                     onclick={() => (controleResultat = 'à_remplacer')}
                     class="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border-2 text-xs font-semibold transition-all
                       {controleResultat === 'à_remplacer'
-                        ? 'border-red-400 bg-red-50 text-red-700'
-                        : 'border-slate-200 bg-white text-slate-500 hover:border-red-200 hover:text-red-600'}"
+                      ? 'border-red-400 bg-red-50 text-red-700'
+                      : 'border-slate-200 bg-white text-slate-500 hover:border-red-200 hover:text-red-600'}"
                   >
                     <CircleX class="w-3.5 h-3.5" />À remplacer
                   </button>
@@ -686,7 +738,10 @@
                   </button>
                   <button
                     type="button"
-                    onclick={() => { showControleForm = false; controleResultat = ''; }}
+                    onclick={() => {
+                      showControleForm = false;
+                      controleResultat = '';
+                    }}
                     class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
                   >
                     Annuler
@@ -700,31 +755,33 @@
               <div
                 class="flex items-center gap-3 rounded-lg px-3.5 py-3 border
                   {ctrlDays !== null && ctrlDays < 0
-                    ? 'bg-red-50 border-red-100'
-                    : ctrlDays !== null && ctrlDays <= 30
-                      ? 'bg-amber-50 border-amber-100'
-                      : 'bg-emerald-50 border-emerald-100'}"
+                  ? 'bg-red-50 border-red-100'
+                  : ctrlDays !== null && ctrlDays <= 30
+                    ? 'bg-amber-50 border-amber-100'
+                    : 'bg-emerald-50 border-emerald-100'}"
               >
                 <div class="flex-1 min-w-0">
                   <p
                     class="text-[10px] font-semibold uppercase tracking-widest
                       {ctrlDays !== null && ctrlDays < 0
-                        ? 'text-red-500'
-                        : ctrlDays !== null && ctrlDays <= 30
-                          ? 'text-amber-600'
-                          : 'text-emerald-600'}"
+                      ? 'text-red-500'
+                      : ctrlDays !== null && ctrlDays <= 30
+                        ? 'text-amber-600'
+                        : 'text-emerald-600'}"
                   >
                     {ctrlDays !== null && ctrlDays < 0 ? 'Contrôle dépassé' : 'Prochain contrôle'}
                   </p>
-                  <p class="text-sm font-semibold text-slate-800 mt-0.5">{formatDate(latestCtrl.prochain_controle)}</p>
+                  <p class="text-sm font-semibold text-slate-800 mt-0.5">
+                    {formatDate(latestCtrl.prochain_controle)}
+                  </p>
                 </div>
                 <span
                   class="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0
                     {ctrlDays !== null && ctrlDays < 0
-                      ? 'bg-red-100 text-red-700'
-                      : ctrlDays !== null && ctrlDays <= 30
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-emerald-100 text-emerald-700'}"
+                    ? 'bg-red-100 text-red-700'
+                    : ctrlDays !== null && ctrlDays <= 30
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-emerald-100 text-emerald-700'}"
                 >
                   {#if ctrlDays !== null && ctrlDays < 0}
                     {Math.abs(ctrlDays)}j de retard
@@ -745,21 +802,33 @@
             <!-- Historique contrôles -->
             {#if selectedEpi.controles.length > 0}
               <div class="space-y-0.5">
-                <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 pt-1 pb-1">Historique</p>
+                <p
+                  class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 pt-1 pb-1"
+                >
+                  Historique
+                </p>
                 {#each selectedEpi.controles as ctrl (ctrl.id_controle)}
                   {@const isConforme = ctrl.resultat === 'conforme'}
-                  <div class="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">
+                  <div
+                    class="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0"
+                  >
                     {#if isConforme}
                       <CircleCheck class="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                     {:else}
                       <CircleX class="w-3.5 h-3.5 text-red-400 shrink-0" />
                     {/if}
                     <div class="flex-1 min-w-0">
-                      <p class="text-xs font-semibold {isConforme ? 'text-emerald-700' : 'text-red-600'}">
+                      <p
+                        class="text-xs font-semibold {isConforme
+                          ? 'text-emerald-700'
+                          : 'text-red-600'}"
+                      >
                         {isConforme ? 'Conforme' : 'À remplacer'}
                       </p>
                       {#if ctrl.date_controle}
-                        <p class="text-[10px] text-slate-400">Effectué le {formatDate(ctrl.date_controle)}</p>
+                        <p class="text-[10px] text-slate-400">
+                          Effectué le {formatDate(ctrl.date_controle)}
+                        </p>
                       {/if}
                     </div>
                     {#if ctrl.prochain_controle}
@@ -773,12 +842,13 @@
             {/if}
           </div>
         </div>
-
       </div>
     </div>
 
     <!-- Pied du panel -->
-    <div class="shrink-0 px-5 py-4 border-t border-slate-200 bg-white flex items-center justify-between gap-3 flex-wrap">
+    <div
+      class="shrink-0 px-5 py-4 border-t border-slate-200 bg-white flex items-center justify-between gap-3 flex-wrap"
+    >
       <div>
         {#if selectedEpi.statut !== 'hors_service'}
           <form
@@ -807,7 +877,9 @@
           <form
             method="POST"
             action="?/remettre_en_service"
-            use:enhance={() => ({ update }) => update()}
+            use:enhance={() =>
+              ({ update }) =>
+                update()}
           >
             <input type="hidden" name="id_epi" value={selectedEpi.id_epi} />
             <button
@@ -874,11 +946,15 @@
     class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-120 bg-white shadow-2xl flex flex-col overflow-hidden"
   >
     <!-- En-tête -->
-    <div class="p-6 bg-linear-to-br from-violet-900 to-violet-700 relative overflow-hidden shrink-0">
+    <div
+      class="p-6 bg-linear-to-br from-violet-900 to-violet-700 relative overflow-hidden shrink-0"
+    >
       <Plus class="absolute -right-4 -bottom-4 w-32 h-32 text-white/5" />
       <div class="relative z-10 flex items-start justify-between gap-4">
         <div class="flex items-center gap-3.5">
-          <div class="w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center">
+          <div
+            class="w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center"
+          >
             <Package class="w-5 h-5 text-white" />
           </div>
           <div>
@@ -945,8 +1021,7 @@
           />
           <datalist id="types-existants">
             {#each allTypes as t (t)}
-              <!-- svelte-ignore element_invalid_self_closing_tag -->
-              <option value={t} />
+              <option value={t}></option>
             {/each}
           </datalist>
         </div>
@@ -955,7 +1030,9 @@
         <div class="space-y-1.5">
           <!-- svelte-ignore a11y_label_has_associated_control -->
           <label class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-            Taille <span class="text-slate-300 font-normal normal-case tracking-normal">(optionnel)</span>
+            Taille <span class="text-slate-300 font-normal normal-case tracking-normal"
+              >(optionnel)</span
+            >
           </label>
           <input
             type="text"
