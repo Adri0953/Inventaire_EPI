@@ -57,6 +57,7 @@ export const load: PageServerLoad = async () => {
         'id_attribution, date_attribution, chauffeur(nom, prenom), epi(modele_epi(designation))',
       )
       .order('date_attribution', { ascending: false })
+      .order('id_attribution', { ascending: false })
       .limit(5),
 
     // 7. Derniers mouvements de stock
@@ -72,18 +73,17 @@ export const load: PageServerLoad = async () => {
     supabase.from('attribution').select('id_chauffeur').is('date_retour', null),
   ]);
 
-  const stats = {
-    total: epiStats?.length || 0,
-    disponibles: 0,
-    attribues: 0,
-    horsService: 0,
-  };
+  const totalStock = (allModeles || []).reduce((sum, m) => sum + (m.stock_total ?? 0), 0);
+  const attribues = (activeAttributions || []).length;
+  const horsService = (epiStats || []).filter((e) => e.statut === 'hors_service').length;
+  const disponibles = totalStock - attribues - horsService;
 
-  epiStats?.forEach((item) => {
-    if (item.statut === 'disponible') stats.disponibles++;
-    else if (item.statut === 'attribué') stats.attribues++;
-    else if (item.statut === 'hors_service') stats.horsService++;
-  });
+  const stats = {
+    total: totalStock,
+    disponibles,
+    attribues,
+    horsService,
+  };
 
   const driversWithEquipment = new Set((activeAttributions || []).map((a) => a.id_chauffeur)).size;
   const driversWithoutEquipment = (totalDrivers || 0) - driversWithEquipment;

@@ -22,6 +22,9 @@
     Clock,
     CircleCheck,
     Undo2,
+    ChevronUp,
+    ChevronDown,
+    ChevronsUpDown,
   } from 'lucide-svelte';
 
   let { data }: { data: PageData } = $props();
@@ -71,7 +74,7 @@
 
   const filtered = $derived.by(() => {
     const q = search.toLowerCase();
-    return data.attributions.filter((a) => {
+    const rows = data.attributions.filter((a) => {
       const name = `${a.chauffeur_prenom} ${a.chauffeur_nom}`.toLowerCase();
       if (q && !name.includes(q) && !a.designation.toLowerCase().includes(q)) return false;
       if (filterChauffeur && a.id_chauffeur !== filterChauffeur) return false;
@@ -81,6 +84,25 @@
       if (filterStatut === 'month' && !a.date_attribution?.startsWith(monthPrefix)) return false;
       return true;
     });
+
+    rows.sort((a, b) => {
+      let cmp = 0;
+      if (sortCol === 'chauffeur')
+        cmp = `${a.chauffeur_nom} ${a.chauffeur_prenom}`.localeCompare(`${b.chauffeur_nom} ${b.chauffeur_prenom}`, 'fr');
+      else if (sortCol === 'epi')
+        cmp = a.designation.localeCompare(b.designation, 'fr');
+      else if (sortCol === 'taille')
+        cmp = (a.taille ?? '').localeCompare(b.taille ?? '', 'fr');
+      else if (sortCol === 'attribution')
+        cmp = (a.date_attribution ?? '').localeCompare(b.date_attribution ?? '');
+      else if (sortCol === 'retour')
+        cmp = (a.date_retour ?? '').localeCompare(b.date_retour ?? '');
+      else if (sortCol === 'statut')
+        cmp = (a.date_retour ? 1 : 0) - (b.date_retour ? 1 : 0);
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
+    return rows;
   });
 
   const hasFilters = $derived(!!(search || filterChauffeur || filterType || filterStatut));
@@ -106,7 +128,9 @@
 
   let confirmDelete = $state(false);
   let editChauffeurId = $state('');
-  let editEpiId = $state('');
+  let editModeleId = $state('');
+  let editEpiSearch = $state('');
+  let showEditEpiDropdown = $state(false);
 
   let showEditForm = $state(false);
 
@@ -114,22 +138,37 @@
     selectedAttrId = id;
     confirmDelete = false;
     showEditForm = false;
+    showEditEpiDropdown = false;
     const a = data.attributions.find((x) => x.id_attribution === id);
     editChauffeurId = a?.id_chauffeur ?? '';
-    editEpiId = a?.id_epi ?? '';
+    editModeleId = a?.id_modele_epi ?? '';
+    editEpiSearch = a ? epiLabel(a) : '';
   }
 
-  // Options du select EPI en édition : l'EPI courant + tous les EPI disponibles.
-  const editEpiOptions = $derived.by(() => {
+  const filteredEditEpi = $derived.by(() => {
+    if (!editEpiSearch.trim()) return editModeleOptions;
+    const q = editEpiSearch.toLowerCase();
+    return editModeleOptions.filter(
+      (e) =>
+        e.designation.toLowerCase().includes(q) ||
+        e.type.toLowerCase().includes(q) ||
+        (e.taille ?? '').toLowerCase().includes(q),
+    );
+  });
+
+  // Options du select modèle en édition : le modèle courant + tous les modèles disponibles.
+  const editModeleOptions = $derived.by(() => {
     if (!selectedAttr) return data.episDisponibles;
-    const exists = data.episDisponibles.some((e) => e.id_epi === selectedAttr.id_epi);
+    const exists = data.episDisponibles.some((e) => e.id_modele_epi === selectedAttr.id_modele_epi);
     if (exists) return data.episDisponibles;
     return [
       {
-        id_epi: selectedAttr.id_epi,
+        id_modele_epi: selectedAttr.id_modele_epi,
         designation: selectedAttr.designation,
         type: selectedAttr.type,
         taille: selectedAttr.taille,
+        stock_total: 0,
+        stock_dispo: 0,
       },
       ...data.episDisponibles,
     ];
@@ -140,7 +179,7 @@
   let createChauffeurId = $state('');
   let createChauffeurSearch = $state('');
   let showChauffeurDropdown = $state(false);
-  let createEpiLines = $state<{ id: string }[]>([{ id: '' }]);
+  let createEpiLines = $state<{ id: string; search: string; open: boolean }[]>([{ id: '', search: '', open: false }]);
 
   const filteredCreateChauffeurs = $derived(
     createChauffeurSearch.trim()
@@ -165,7 +204,7 @@
   function openCreate(prefillChauffeurId = '') {
     showCreate = true;
     showChauffeurDropdown = false;
-    createEpiLines = [{ id: '' }];
+    createEpiLines = [{ id: '', search: '', open: false }];
     if (prefillChauffeurId) {
       const c = data.chauffeurs.find((ch) => ch.id_chauffeur === prefillChauffeurId);
       createChauffeurId = prefillChauffeurId;
@@ -190,18 +229,32 @@
   });
 
   function addEpiLine() {
-    createEpiLines = [...createEpiLines, { id: '' }];
+    createEpiLines = [...createEpiLines, { id: '', search: '', open: false }];
   }
 
   function removeEpiLine(i: number) {
-    createEpiLines = createEpiLines.filter((l, idx) => idx !== i || !l);
+    createEpiLines = createEpiLines.filter((_, idx) => idx !== i);
   }
 
-  function availableEpi(lineIndex: number) {
+  function filteredEpi(lineIndex: number, query: string) {
     const othersSelected = new Set(
       createEpiLines.filter((l, idx) => idx !== lineIndex && l.id).map((l) => l.id),
     );
-    return data.episDisponibles.filter((e) => !othersSelected.has(e.id_epi));
+    const available = data.episDisponibles.filter((e) => !othersSelected.has(e.id_modele_epi));
+    if (!query.trim()) return available;
+    const q = query.toLowerCase();
+    return available.filter(
+      (e) =>
+        e.designation.toLowerCase().includes(q) ||
+        e.type.toLowerCase().includes(q) ||
+        (e.taille ?? '').toLowerCase().includes(q),
+    );
+  }
+
+  function selectEpi(i: number, modeleId: string, label: string) {
+    createEpiLines[i].id = modeleId;
+    createEpiLines[i].search = label;
+    createEpiLines[i].open = false;
   }
 
   const createIsValid = $derived(
@@ -220,6 +273,15 @@
   }
 
   const GRID = 'grid-template-columns: 1.2fr 1.4fr 70px 120px 150px 110px 56px';
+
+  type SortCol = 'chauffeur' | 'epi' | 'taille' | 'attribution' | 'retour' | 'statut';
+  let sortCol = $state<SortCol>('attribution');
+  let sortDir = $state<'asc' | 'desc'>('desc');
+
+  function toggleSort(col: SortCol) {
+    if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    else { sortCol = col; sortDir = 'asc'; }
+  }
 </script>
 
 <!-- ── PAGE ──────────────────────────────────────────────────────────────── -->
@@ -347,19 +409,29 @@
       class="grid items-center gap-4 border-b border-slate-100 bg-slate-50 px-6 py-3"
       style={GRID}
     >
-      <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Chauffeur</p>
-      <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">EPI</p>
-      <p class="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">
-        Taille
-      </p>
-      <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Attribution</p>
-      <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Retour</p>
-      <p class="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">
-        Statut
-      </p>
-      <p class="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">
-        Suppr.
-      </p>
+      {#snippet sortBtn(col: SortCol, label: string, center = false)}
+        <button
+          onclick={() => toggleSort(col)}
+          class="flex items-center gap-1 text-[10px] font-black tracking-widest uppercase transition-colors
+            {sortCol === col ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-600'}
+            {center ? 'justify-center' : ''}"
+        >
+          {label}
+          {#if sortCol === col}
+            {#if sortDir === 'asc'}<ChevronUp class="h-3 w-3" />{:else}<ChevronDown class="h-3 w-3" />{/if}
+          {:else}
+            <ChevronsUpDown class="h-3 w-3 opacity-40" />
+          {/if}
+        </button>
+      {/snippet}
+
+      {@render sortBtn('chauffeur', 'Chauffeur')}
+      {@render sortBtn('epi', 'EPI')}
+      {@render sortBtn('taille', 'Taille', true)}
+      {@render sortBtn('attribution', 'Attribution')}
+      {@render sortBtn('retour', 'Retour')}
+      {@render sortBtn('statut', 'Statut', true)}
+      <p class="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Suppr.</p>
     </div>
 
     {#if filtered.length === 0}
@@ -376,8 +448,7 @@
         tabindex="0"
         onclick={() => openAttr(a.id_attribution)}
         onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && openAttr(a.id_attribution)}
-        class="group grid cursor-pointer items-center gap-4 border-b border-l-4 border-slate-50 px-6 py-3.5 transition-colors hover:bg-emerald-50/40
-          {active ? 'border-l-emerald-400' : 'border-l-slate-200'}"
+        class="group grid cursor-pointer items-center gap-4 border-b border-slate-100 px-6 py-3.5 transition-colors hover:bg-emerald-50/40"
         style={GRID}
       >
         <!-- Chauffeur -->
@@ -395,11 +466,6 @@
 
         <!-- EPI -->
         <div class="flex min-w-0 items-center gap-2.5">
-          <div
-            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500"
-          >
-            <Package class="h-4 w-4" />
-          </div>
           <div class="min-w-0">
             <p class="truncate text-sm font-semibold text-slate-800">{a.designation}</p>
             <p class="truncate text-xs text-slate-400">{a.type}</p>
@@ -688,20 +754,55 @@
               </select>
             </div>
             <div class="space-y-1.5">
-              <label
-                for="edit-epi"
-                class="text-[10px] font-black tracking-widest text-slate-400 uppercase">EPI</label
-              >
-              <select
-                id="edit-epi"
-                name="id_epi"
-                bind:value={editEpiId}
-                class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-emerald-400 focus:outline-none"
-              >
-                {#each editEpiOptions as e (e.id_epi)}
-                  <option value={e.id_epi}>{epiLabel(e)}</option>
-                {/each}
-              </select>
+              <label for="edit-epi-search" class="text-[10px] font-black tracking-widest text-slate-400 uppercase">EPI</label>
+              <input type="hidden" name="id_modele_epi" value={editModeleId} />
+              <div class="relative">
+                <Search class="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                <input
+                  id="edit-epi-search"
+                  type="text"
+                  bind:value={editEpiSearch}
+                  onfocus={() => (showEditEpiDropdown = true)}
+                  oninput={() => { showEditEpiDropdown = true; editModeleId = ''; }}
+                  onblur={() => setTimeout(() => (showEditEpiDropdown = false), 150)}
+                  autocomplete="off"
+                  class="w-full rounded-xl border py-2 pr-3 pl-8 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-400/30
+                    {editModeleId ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-white'}"
+                />
+                {#if showEditEpiDropdown}
+                  {#if filteredEditEpi.length > 0}
+                    <ul class="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                      {#each filteredEditEpi as e (e.id_modele_epi)}
+                        <li>
+                          <button
+                            type="button"
+                            onmousedown={() => { editModeleId = e.id_modele_epi; editEpiSearch = epiLabel(e); showEditEpiDropdown = false; }}
+                            disabled={e.stock_dispo <= 0 && e.id_modele_epi !== selectedAttr?.id_modele_epi}
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors
+                              {e.stock_dispo <= 0 && e.id_modele_epi !== selectedAttr?.id_modele_epi ? 'cursor-not-allowed opacity-40' : 'hover:bg-emerald-50'}
+                              {editModeleId === e.id_modele_epi ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700'}"
+                          >
+                            <span class="min-w-0 flex-1 text-xs leading-tight">
+                              <span class="font-semibold">{e.designation}</span>
+                              {#if e.taille}<span class="text-slate-400"> · {e.taille}</span>{/if}
+                              <span class="text-slate-400"> — {e.type}</span>
+                            </span>
+                            {#if e.stock_dispo <= 0}
+                              <span class="shrink-0 rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-black text-red-500">ÉPUISÉ</span>
+                            {:else}
+                              <span class="shrink-0 text-[10px] font-semibold text-emerald-600">{e.stock_dispo} dispo</span>
+                            {/if}
+                          </button>
+                        </li>
+                      {/each}
+                    </ul>
+                  {:else}
+                    <div class="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-400 shadow-lg">
+                      Aucun EPI trouvé
+                    </div>
+                  {/if}
+                {/if}
+              </div>
             </div>
             <button
               type="submit"
@@ -904,16 +1005,55 @@
           </p>
           {#each createEpiLines as line, i (i)}
             <div class="flex items-center gap-2">
-              <select
-                name="id_epi"
-                bind:value={line.id}
-                class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-400/30 focus:outline-none"
-              >
-                <option value="">Choisir un EPI…</option>
-                {#each availableEpi(i) as e (e.id_epi)}
-                  <option value={e.id_epi}>{epiLabel(e)}</option>
-                {/each}
-              </select>
+              <input type="hidden" name="id_modele_epi" value={line.id} />
+              <div class="relative min-w-0 flex-1">
+                <Search class="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  bind:value={line.search}
+                  onfocus={() => (createEpiLines[i].open = true)}
+                  oninput={() => { createEpiLines[i].open = true; createEpiLines[i].id = ''; }}
+                  onblur={() => setTimeout(() => { createEpiLines[i].open = false; }, 150)}
+                  placeholder="Rechercher un EPI…"
+                  autocomplete="off"
+                  class="w-full rounded-xl border py-3 pr-4 pl-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-400/30
+                    {line.id ? 'border-emerald-300 bg-emerald-50 focus:border-emerald-500' : 'border-slate-200 bg-slate-50 focus:border-emerald-500 focus:bg-white'}"
+                />
+                {#if line.open}
+                  {@const results = filteredEpi(i, line.search)}
+                  {#if results.length > 0}
+                    <ul class="absolute z-10 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                      {#each results as e (e.id_modele_epi)}
+                        <li>
+                          <button
+                            type="button"
+                            onmousedown={() => selectEpi(i, e.id_modele_epi, epiLabel(e))}
+                            disabled={e.stock_dispo <= 0}
+                            class="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors
+                              {e.stock_dispo <= 0 ? 'cursor-not-allowed opacity-40' : 'hover:bg-emerald-50'}
+                              {line.id === e.id_modele_epi ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700'}"
+                          >
+                            <span class="min-w-0 flex-1 leading-tight">
+                              <span class="font-semibold">{e.designation}</span>
+                              {#if e.taille}<span class="text-slate-400"> · {e.taille}</span>{/if}
+                              <span class="text-slate-400"> — {e.type}</span>
+                            </span>
+                            {#if e.stock_dispo <= 0}
+                              <span class="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-black text-red-500">ÉPUISÉ</span>
+                            {:else}
+                              <span class="shrink-0 text-[11px] font-semibold text-emerald-600">{e.stock_dispo} dispo</span>
+                            {/if}
+                          </button>
+                        </li>
+                      {/each}
+                    </ul>
+                  {:else}
+                    <div class="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-400 shadow-lg">
+                      Aucun EPI trouvé
+                    </div>
+                  {/if}
+                {/if}
+              </div>
               {#if createEpiLines.length > 1}
                 <button
                   type="button"
@@ -927,9 +1067,9 @@
             </div>
           {/each}
 
-          {#if data.episDisponibles.length === 0}
+          {#if data.episDisponibles.every((e) => e.stock_dispo <= 0)}
             <p class="text-xs text-amber-600">Aucun EPI disponible actuellement.</p>
-          {:else if createEpiLines.filter((l) => l.id).length < data.episDisponibles.length}
+          {:else if createEpiLines.filter((l) => l.id).length < data.episDisponibles.filter((e) => e.stock_dispo > 0).length}
             <button
               type="button"
               onclick={addEpiLine}

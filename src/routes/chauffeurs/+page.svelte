@@ -204,6 +204,13 @@
   let editNom = $state('');
   let editActivite = $state('');
 
+  const editChanged = $derived(
+    selectedDriver !== null &&
+      (editPrenom.trim() !== selectedDriver.prenom ||
+        editNom.trim() !== selectedDriver.nom ||
+        editActivite !== (selectedDriver.activite ?? '')),
+  );
+
   function startEdit() {
     if (!selectedDriver) return;
     editPrenom = selectedDriver.prenom;
@@ -421,7 +428,7 @@
         </button>
       {/snippet}
 
-      {@render sortBtn('nom', 'Nom / Prénom')}
+      <div class="pl-10">{@render sortBtn('nom', 'Nom / Prénom')}</div>
       {@render sortBtn('activite', 'Activité', true)}
       {@render sortBtn('epis', 'EPI', true)}
       {@render sortBtn('statut', 'Statut', true)}
@@ -826,11 +833,9 @@
     <div class="flex-1 overflow-y-auto" role="none" onclick={() => (epiMenuOpen = {})}>
       <!-- ── Mode édition ─────────────────────────────────────────── -->
       {#if editMode}
-        <div class="p-6 border-b border-slate-100 bg-blue-50/30">
-          <h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">
-            Modifier les informations
-          </h3>
+        <div class="p-6">
           <form
+            id="edit-chauffeur-form"
             method="POST"
             action="?/modifier_chauffeur"
             use:enhance={({ cancel }) => {
@@ -843,47 +848,47 @@
                 update();
               };
             }}
-            class="space-y-3"
+            class="space-y-4"
           >
             <input type="hidden" name="id_chauffeur" value={selectedDriver.id_chauffeur} />
             <div class="grid grid-cols-2 gap-3">
-              <div>
+              <div class="space-y-1.5">
                 <label
                   for="edit-prenom"
-                  class="text-[10px] font-black uppercase text-slate-400 block mb-1">Prénom</label
+                  class="text-xs font-black uppercase tracking-widest text-slate-500 block">Prénom</label
                 >
                 <input
                   id="edit-prenom"
                   name="prenom"
                   bind:value={editPrenom}
                   required
-                  class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
                 />
               </div>
-              <div>
+              <div class="space-y-1.5">
                 <label
                   for="edit-nom"
-                  class="text-[10px] font-black uppercase text-slate-400 block mb-1">Nom</label
+                  class="text-xs font-black uppercase tracking-widest text-slate-500 block">Nom</label
                 >
                 <input
                   id="edit-nom"
                   name="nom"
                   bind:value={editNom}
                   required
-                  class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
                 />
               </div>
             </div>
-            <div>
+            <div class="space-y-1.5">
               <label
                 for="edit-activite"
-                class="text-[10px] font-black uppercase text-slate-400 block mb-1">Activité</label
+                class="text-xs font-black uppercase tracking-widest text-slate-500 block">Activité</label
               >
               <select
                 id="edit-activite"
                 name="activite"
                 bind:value={editActivite}
-                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all appearance-none"
               >
                 <option value="">— Non renseignée —</option>
                 {#each ACTIVITES as a (a)}
@@ -891,24 +896,9 @@
                 {/each}
               </select>
             </div>
-            <div class="flex gap-2 pt-1">
-              <button
-                type="submit"
-                class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-500 text-white text-xs font-black hover:bg-blue-400 transition-colors"
-              >
-                <Save class="w-3.5 h-3.5" />Enregistrer
-              </button>
-              <button
-                type="button"
-                onclick={() => (editMode = false)}
-                class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-black hover:bg-slate-200 transition-colors"
-              >
-                Annuler
-              </button>
-            </div>
           </form>
         </div>
-      {/if}
+      {:else}
 
       <!-- ── Liste des EPI ─────────────────────────────────────────── -->
       <div class="p-5 space-y-4">
@@ -916,15 +906,6 @@
           <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">
             EPI attribués ({selectedDriver.epis.length})
           </p>
-          {#if getEquipmentStatus(selectedDriver) !== 'complet'}
-            <button
-              type="button"
-              onclick={() => goto('/attributions?chauffeur=' + selectedDriver.id_chauffeur)}
-              class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-black hover:bg-emerald-700 transition-colors"
-            >
-              <Plus class="w-3.5 h-3.5" />Équiper
-            </button>
-          {/if}
         </div>
 
         {#if selectedDriver.epis.length === 0}
@@ -946,7 +927,13 @@
                   : 'border-slate-100'}"
             >
               <div class="flex">
-                <div class="flex-1 min-w-0">
+                <div
+                  role="button"
+                  tabindex="0"
+                  onclick={() => goto('/epi?fiche=' + epi.id_epi)}
+                  onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && goto('/epi?fiche=' + epi.id_epi)}
+                  class="flex-1 min-w-0 cursor-pointer hover:bg-slate-50/60 transition-colors rounded-l-2xl"
+                >
                   <div class="px-3 py-3 flex items-start gap-2">
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-1.5 flex-wrap">
@@ -968,15 +955,13 @@
                         <p
                           class="text-[10px] font-bold text-red-500 mt-1.5 flex items-center gap-1"
                         >
-                          <Clock class="w-3 h-3 shrink-0" />Expiré le {formatDate(
-                            epi.date_expiration,
-                          )}
+                          <Clock class="w-3 h-3 shrink-0" />{formatDate(epi.date_expiration)}
                         </p>
                       {:else if status === 'control_overdue'}
                         <p
                           class="text-[10px] font-bold text-red-600 mt-1.5 flex items-center gap-1"
                         >
-                          <Wrench class="w-3 h-3 shrink-0" />Ctrl. dû le {formatDate(
+                          <Wrench class="w-3 h-3 shrink-0" />Contrôle dû le {formatDate(
                             epi.prochain_controle,
                           )}
                         </p>
@@ -984,7 +969,7 @@
                         <p
                           class="text-[10px] font-bold text-orange-500 mt-1.5 flex items-center gap-1"
                         >
-                          <Clock class="w-3 h-3 shrink-0" />J-{days} · {formatDate(
+                          <Clock class="w-3 h-3 shrink-0" />Dans {days} jour{days !== 1 ? 's' : ''} · {formatDate(
                             epi.date_expiration,
                           )}
                         </p>
@@ -992,7 +977,7 @@
                         <p
                           class="text-[10px] font-bold text-amber-500 mt-1.5 flex items-center gap-1"
                         >
-                          <Wrench class="w-3 h-3 shrink-0" />J-{controlDays} · {formatDate(
+                          <Wrench class="w-3 h-3 shrink-0" />Contrôle dans {controlDays} jour{controlDays !== 1 ? 's' : ''} · {formatDate(
                             epi.prochain_controle,
                           )}
                         </p>
@@ -1032,11 +1017,11 @@
                         {#if status === 'expired'}
                           <TriangleAlert class="w-2.5 h-2.5" />Expiré
                         {:else if status === 'control_overdue'}
-                          <Wrench class="w-2.5 h-2.5" />Ctrl. dépassé
+                          <Wrench class="w-2.5 h-2.5" />Contrôle dépassé
                         {:else if status === 'expiring_soon'}
-                          <Clock class="w-2.5 h-2.5" />Exp. proche
+                          <Clock class="w-2.5 h-2.5" />Expiration proche
                         {:else if status === 'control_soon'}
-                          <Wrench class="w-2.5 h-2.5" />Ctrl. proche
+                          <Wrench class="w-2.5 h-2.5" />Contrôle proche
                         {:else}
                           <ShieldCheck class="w-2.5 h-2.5" />En ordre
                         {/if}
@@ -1085,13 +1070,14 @@
                                 <X class="w-3.5 h-3.5" />Retirer
                               </button>
                             </form>
+                            {#if status !== 'expired'}
                             <form
                               method="POST"
                               action="?/hors_service"
                               use:enhance={async ({ cancel }) => {
                                 const ok = await confirmAction({
                                   title: 'Mettre hors service',
-                                  message: `Marquer "${epi.designation}" comme hors service ?`,
+                                  message: `Marquer "${epi.designation}" comme hors service ? Il sera désattribué et le stock diminuera de 1.`,
                                   confirmLabel: 'Confirmer',
                                   confirmVariant: 'danger',
                                 });
@@ -1115,6 +1101,7 @@
                                 <ShieldX class="w-3.5 h-3.5" />Hors service
                               </button>
                             </form>
+                            {/if}
                             <button
                               type="button"
                               onclick={() => {
@@ -1130,49 +1117,49 @@
                       </div>
                     </div>
                   </div>
-
-                  {#if epiTransferOpen[epi.id_attribution]}
-                    <div class="px-4 pb-4 bg-indigo-50/50 border-t border-indigo-100">
-                      <form
-                        method="POST"
-                        action="?/transferer_epi"
-                        use:enhance={({ cancel }) => {
-                          if (!epiTransferTargets[epi.id_attribution]) {
-                            cancel();
-                            return;
-                          }
-                          return ({ update }) => {
-                            epiTransferOpen = { ...epiTransferOpen, [epi.id_attribution]: false };
-                            update();
-                          };
-                        }}
-                        class="flex gap-2 pt-3"
-                      >
-                        <input type="hidden" name="id_attribution" value={epi.id_attribution} />
-                        <input type="hidden" name="id_epi" value={epi.id_epi} />
-                        <select
-                          name="id_chauffeur_dest"
-                          bind:value={epiTransferTargets[epi.id_attribution]}
-                          class="flex-1 px-3 py-2 rounded-xl border border-indigo-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-                        >
-                          <option value="">Choisir un chauffeur…</option>
-                          {#each otherDrivers as d (d.id_chauffeur)}
-                            <option value={d.id_chauffeur}>{d.nom} {d.prenom}</option>
-                          {/each}
-                        </select>
-                        <button
-                          type="submit"
-                          disabled={!epiTransferTargets[epi.id_attribution]}
-                          class="px-3 py-2 rounded-xl bg-indigo-700 text-white text-xs font-black hover:bg-indigo-600 transition-colors disabled:opacity-40 shrink-0"
-                        >
-                          OK
-                        </button>
-                      </form>
-                    </div>
-                  {/if}
-                </div>
               </div>
             </div>
+
+            {#if epiTransferOpen[epi.id_attribution]}
+              <div class="px-4 pb-4 bg-indigo-50/50 border-t border-indigo-100">
+                <form
+                  method="POST"
+                  action="?/transferer_epi"
+                  use:enhance={({ cancel }) => {
+                    if (!epiTransferTargets[epi.id_attribution]) {
+                      cancel();
+                      return;
+                    }
+                    return ({ update }) => {
+                      epiTransferOpen = { ...epiTransferOpen, [epi.id_attribution]: false };
+                      update();
+                    };
+                  }}
+                  class="flex gap-2 pt-3"
+                >
+                  <input type="hidden" name="id_attribution" value={epi.id_attribution} />
+                  <input type="hidden" name="id_epi" value={epi.id_epi} />
+                  <select
+                    name="id_chauffeur_dest"
+                    bind:value={epiTransferTargets[epi.id_attribution]}
+                    class="flex-1 px-3 py-2 rounded-xl border border-indigo-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+                  >
+                    <option value="">Choisir un chauffeur…</option>
+                    {#each otherDrivers as d (d.id_chauffeur)}
+                      <option value={d.id_chauffeur}>{d.nom} {d.prenom}</option>
+                    {/each}
+                  </select>
+                  <button
+                    type="submit"
+                    disabled={!epiTransferTargets[epi.id_attribution]}
+                    class="px-3 py-2 rounded-xl bg-indigo-700 text-white text-xs font-black hover:bg-indigo-600 transition-colors disabled:opacity-40 shrink-0"
+                  >
+                    OK
+                  </button>
+                </form>
+              </div>
+            {/if}
+          </div>
           {/snippet}
 
           <!-- Résumé par statut / filtres -->
@@ -1199,10 +1186,7 @@
                   ? 'bg-red-800 border-red-800 text-white shadow-md scale-105'
                   : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'}"
               >
-                <Wrench class="w-3.5 h-3.5" />{epiStatusCounts.control_overdue} ctrl. dépassé{epiStatusCounts.control_overdue >
-                1
-                  ? 's'
-                  : ''}
+                <Wrench class="w-3.5 h-3.5" />{epiStatusCounts.control_overdue} contrôle{epiStatusCounts.control_overdue > 1 ? 's' : ''} dépassé{epiStatusCounts.control_overdue > 1 ? 's' : ''}
               </button>
             {/if}
             {#if epiStatusCounts.expiring_soon > 0}
@@ -1213,10 +1197,7 @@
                   ? 'bg-orange-400 border-orange-400 text-white shadow-md scale-105'
                   : 'bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200'}"
               >
-                <Clock class="w-3.5 h-3.5" />{epiStatusCounts.expiring_soon} exp. proche{epiStatusCounts.expiring_soon >
-                1
-                  ? 's'
-                  : ''}
+                <Clock class="w-3.5 h-3.5" />{epiStatusCounts.expiring_soon} expiration{epiStatusCounts.expiring_soon > 1 ? 's' : ''} proche{epiStatusCounts.expiring_soon > 1 ? 's' : ''}
               </button>
             {/if}
             {#if epiStatusCounts.control_soon > 0}
@@ -1227,10 +1208,7 @@
                   ? 'bg-amber-400 border-amber-400 text-white shadow-md scale-105'
                   : 'bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200'}"
               >
-                <Wrench class="w-3.5 h-3.5" />{epiStatusCounts.control_soon} ctrl. proche{epiStatusCounts.control_soon >
-                1
-                  ? 's'
-                  : ''}
+                <Wrench class="w-3.5 h-3.5" />{epiStatusCounts.control_soon} contrôle{epiStatusCounts.control_soon > 1 ? 's' : ''} proche{epiStatusCounts.control_soon > 1 ? 's' : ''}
               </button>
             {/if}
             {#if epiStatusCounts.ok > 0}
@@ -1331,53 +1309,84 @@
           </details>
         </div>
       {/if}
+
+      {/if}
     </div>
 
     <!-- ── Pied du panel ──────────────────────────────────────────────── -->
     <div
       class="shrink-0 px-6 py-4 border-t border-slate-100 bg-white flex items-center justify-between gap-3"
     >
-      <button
-        onclick={startEdit}
-        class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 text-slate-700 text-sm font-black hover:bg-slate-200 transition-colors"
-      >
-        <Pencil class="w-4 h-4" />Modifier
-      </button>
-
-      {#if !confirmDelete}
-        <button
-          onclick={() => (confirmDelete = true)}
-          class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-red-50 text-red-600 text-sm font-black hover:bg-red-100 transition-colors border border-red-200"
-        >
-          <Trash2 class="w-4 h-4" />Supprimer
-        </button>
-      {:else}
+      {#if editMode}
         <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-red-600">Confirmer la suppression ?</span>
-          <form
-            method="POST"
-            action="?/supprimer"
-            use:enhance={() =>
-              ({ update }) => {
-                selectedDriverId = null;
-                update();
-              }}
-          >
-            <input type="hidden" name="id_chauffeur" value={selectedDriver.id_chauffeur} />
-            <button
-              type="submit"
-              class="px-3 py-1.5 rounded-xl bg-red-600 text-white text-xs font-black hover:bg-red-700 transition-colors"
-            >
-              Oui, supprimer
-            </button>
-          </form>
           <button
-            onclick={() => (confirmDelete = false)}
-            class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-black hover:bg-slate-200 transition-colors"
+            type="submit"
+            form="edit-chauffeur-form"
+            disabled={!editChanged}
+            class="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-blue-500 text-white text-sm font-black transition-colors
+              {editChanged ? 'hover:bg-blue-400' : 'opacity-40 cursor-not-allowed'}"
+          >
+            <Save class="w-4 h-4" />Enregistrer
+          </button>
+          <button
+            type="button"
+            onclick={() => (editMode = false)}
+            class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 text-slate-700 text-sm font-black hover:bg-slate-200 transition-colors"
           >
             Annuler
           </button>
         </div>
+      {:else}
+        <div class="flex items-center gap-2">
+          <a
+            href="/attributions?chauffeur={selectedDriver.id_chauffeur}"
+            class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 text-white text-sm font-black hover:bg-emerald-700 transition-colors"
+          >
+            <Plus class="w-4 h-4" />Équiper
+          </a>
+          <button
+            onclick={startEdit}
+            class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 text-slate-700 text-sm font-black hover:bg-slate-200 transition-colors"
+          >
+            <Pencil class="w-4 h-4" />Modifier
+          </button>
+        </div>
+
+        {#if !confirmDelete}
+          <button
+            onclick={() => (confirmDelete = true)}
+            class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-red-50 text-red-600 text-sm font-black hover:bg-red-100 transition-colors border border-red-200"
+          >
+            <Trash2 class="w-4 h-4" />Supprimer
+          </button>
+        {:else}
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-red-600">Confirmer la suppression ?</span>
+            <form
+              method="POST"
+              action="?/supprimer"
+              use:enhance={() =>
+                ({ update }) => {
+                  selectedDriverId = null;
+                  update();
+                }}
+            >
+              <input type="hidden" name="id_chauffeur" value={selectedDriver.id_chauffeur} />
+              <button
+                type="submit"
+                class="px-3 py-1.5 rounded-xl bg-red-600 text-white text-xs font-black hover:bg-red-700 transition-colors"
+              >
+                Oui, supprimer
+              </button>
+            </form>
+            <button
+              onclick={() => (confirmDelete = false)}
+              class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-black hover:bg-slate-200 transition-colors"
+            >
+              Annuler
+            </button>
+          </div>
+        {/if}
       {/if}
     </div>
   </div>

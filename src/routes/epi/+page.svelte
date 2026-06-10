@@ -22,6 +22,7 @@
     CircleCheck,
     CircleX,
     RotateCcw,
+    Search,
   } from 'lucide-svelte';
   import { fly, fade } from 'svelte/transition';
   import { quintOut, cubicIn } from 'svelte/easing';
@@ -70,6 +71,25 @@
   let search = $state('');
   let filterStatut = $state('');
   let filterType = $state('');
+  let showSearchDropdown = $state(false);
+
+  const allChauffeurNames = $derived(
+    [...new Set(data.epis.flatMap((e) => e.historique.map((h) => h.chauffeur_nom)))].sort(),
+  );
+
+  const searchSuggestions = $derived.by(() => {
+    const q = search.toLowerCase().trim();
+    const chauffeurs = q
+      ? allChauffeurNames.filter((n) => n.toLowerCase().includes(q)).slice(0, 5)
+      : allChauffeurNames.slice(0, 6);
+    const epiNames = q
+      ? [...new Set(data.epis.map((e) => e.designation))]
+          .filter((d) => d.toLowerCase().includes(q))
+          .sort()
+          .slice(0, 4)
+      : [];
+    return { chauffeurs, epiNames };
+  });
 
   type SortCol = 'designation' | 'type' | 'statut' | 'chauffeur' | 'expiration';
   let sortCol = $state<SortCol>('designation');
@@ -95,8 +115,14 @@
   const filtered = $derived.by(() => {
     const rows = data.epis.filter((e) => {
       const q = search.toLowerCase();
-      if (q && !e.designation.toLowerCase().includes(q) && !e.type.toLowerCase().includes(q))
-        return false;
+      if (q) {
+        const matchesEpi =
+          e.designation.toLowerCase().includes(q) || e.type.toLowerCase().includes(q);
+        const matchesChauffeur = e.historique.some((h) =>
+          h.chauffeur_nom.toLowerCase().includes(q),
+        );
+        if (!matchesEpi && !matchesChauffeur) return false;
+      }
       if (filterStatut && e.statut !== filterStatut) return false;
       if (filterType && e.type !== filterType) return false;
       return true;
@@ -258,12 +284,76 @@
 
   <!-- Barre de filtres -->
   <div class="flex flex-col sm:flex-row gap-3">
-    <input
-      type="search"
-      bind:value={search}
-      placeholder="Rechercher un EPI…"
-      class="flex-1 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
-    />
+    <div class="relative flex-1">
+      <Search
+        class="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400"
+      />
+      <input
+        type="search"
+        bind:value={search}
+        onfocus={() => (showSearchDropdown = true)}
+        onblur={() => setTimeout(() => (showSearchDropdown = false), 150)}
+        placeholder="Rechercher par EPI ou chauffeur…"
+        class="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pr-4 pl-10 text-sm font-medium shadow-sm focus:border-transparent focus:ring-2 focus:ring-violet-400 focus:outline-none"
+      />
+      {#if showSearchDropdown && (searchSuggestions.chauffeurs.length > 0 || searchSuggestions.epiNames.length > 0)}
+        <div
+          class="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg"
+        >
+          {#if searchSuggestions.chauffeurs.length > 0}
+            <div
+              class="border-b border-slate-100 px-3 py-2 text-[10px] font-semibold tracking-widest text-slate-400 uppercase"
+            >
+              Chauffeurs
+            </div>
+            {#each searchSuggestions.chauffeurs as name (name)}
+              <button
+                type="button"
+                onmousedown={() => {
+                  search = name;
+                  showSearchDropdown = false;
+                }}
+                class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-violet-50
+                  {search === name ? 'bg-violet-50 text-violet-700' : ''}"
+              >
+                <span
+                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-[11px] font-black text-violet-700"
+                >
+                  {name[0]?.toUpperCase()}
+                </span>
+                {name}
+              </button>
+            {/each}
+          {/if}
+          {#if searchSuggestions.epiNames.length > 0}
+            <div
+              class="border-b border-slate-100 px-3 py-2 text-[10px] font-semibold tracking-widest text-slate-400 uppercase
+                {searchSuggestions.chauffeurs.length > 0 ? 'border-t border-slate-100' : ''}"
+            >
+              EPI
+            </div>
+            {#each searchSuggestions.epiNames as name (name)}
+              <button
+                type="button"
+                onmousedown={() => {
+                  search = name;
+                  showSearchDropdown = false;
+                }}
+                class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-violet-50
+                  {search === name ? 'bg-violet-50 text-violet-700' : ''}"
+              >
+                <span
+                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-[11px] font-black text-violet-700"
+                >
+                  <Package class="h-3.5 w-3.5" />
+                </span>
+                {name}
+              </button>
+            {/each}
+          {/if}
+        </div>
+      {/if}
+    </div>
     <select
       bind:value={filterType}
       class="px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 min-w-40"
@@ -527,7 +617,7 @@
                 ? 'bg-amber-50 border border-amber-200 text-amber-700'
                 : 'bg-slate-100 border border-slate-200 text-slate-500'}"
           >
-            <Clock class="w-3 h-3 shrink-0" />{expAlert === 'expired' ? 'Expiré le' : 'Exp.'}
+            <Clock class="w-3 h-3 shrink-0" />{expAlert === 'expired' ? 'Expiré le' : 'Expire le'}
             {formatDate(selectedEpi.date_expiration)}
           </span>
         {/if}
@@ -557,7 +647,7 @@
             <div class="flex items-center gap-2">
               <UserCheck class="w-3.5 h-3.5 text-blue-500" />
               <span class="text-[11px] font-semibold text-blue-600 uppercase tracking-widest"
-                >Attribution</span
+                >Chauffeur</span
               >
             </div>
             {#if selectedEpi.statut === 'attribué' && activeAttr}
