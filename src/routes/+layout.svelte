@@ -58,6 +58,12 @@
           EPI
         </a>
         <a
+          href={resolve('/stocks')}
+          class="nav-link {$page.url.pathname.startsWith('/stocks') ? 'active' : ''}"
+        >
+          Stocks
+        </a>
+        <a
           href={resolve('/attributions')}
           class="nav-link {$page.url.pathname.startsWith('/attributions') ? 'active' : ''}"
         >

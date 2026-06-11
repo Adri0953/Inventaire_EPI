@@ -12,7 +12,6 @@
     Wrench,
     Trash2,
     X,
-    Plus,
     Save,
     UserCheck,
     UserX,
@@ -181,23 +180,6 @@
   let showControleForm = $state(false);
   let attribuerChauffeurId = $state('');
   let controleResultat = $state('');
-
-  // ── Panel création modèle ───────────────────────────────────────────
-  let showCreatePanel = $state(false);
-  let createDesignation = $state('');
-  let createType = $state('');
-  let createTaille = $state('');
-  let createStockTotal = $state(0);
-  let createSeuilAlerte = $state(0);
-
-  function openCreatePanel() {
-    showCreatePanel = true;
-    createDesignation = '';
-    createType = '';
-    createTaille = '';
-    createStockTotal = 0;
-    createSeuilAlerte = 0;
-  }
 </script>
 
 <!-- ── PAGE ──────────────────────────────────────────────────────────────── -->
@@ -214,13 +196,14 @@
         <h1 class="text-3xl font-black text-violet-900 tracking-tight uppercase">EPI</h1>
       </div>
     </div>
-    <button
-      onclick={openCreatePanel}
-      class="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-violet-700 text-white text-sm font-bold hover:bg-violet-600 transition-colors shadow-lg"
+    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+    <a
+      href="/stocks"
+      class="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-violet-200 text-violet-700 bg-white text-sm font-bold hover:bg-violet-50 transition-colors"
     >
-      <Plus class="w-4 h-4" />
-      Ajouter un EPI
-    </button>
+      <Package class="w-4 h-4" />
+      Gérer les stocks
+    </a>
   </div>
 
   <!-- Stats -->
@@ -523,7 +506,10 @@
                 confirmLabel: 'Supprimer',
                 confirmVariant: 'danger',
               });
-              if (!ok) { cancel(); return; }
+              if (!ok) {
+                cancel();
+                return;
+              }
               return ({ update }) => update();
             }}
           >
@@ -661,7 +647,10 @@
                     confirmLabel: 'Retirer',
                     confirmVariant: 'danger',
                   });
-                  if (!ok) { cancel(); return; }
+                  if (!ok) {
+                    cancel();
+                    return;
+                  }
                   return ({ update }) => update();
                 }}
               >
@@ -973,7 +962,10 @@
                 confirmLabel: 'Confirmer',
                 confirmVariant: 'danger',
               });
-              if (!ok) { cancel(); return; }
+              if (!ok) {
+                cancel();
+                return;
+              }
               return ({ update }) => update();
             }}
           >
@@ -1043,172 +1035,5 @@
         </div>
       {/if}
     </div>
-  </div>
-{/if}
-
-<!-- ── PANEL CRÉATION ──────────────────────────────────────────────────────── -->
-{#if showCreatePanel}
-  <button
-    transition:fade={{ duration: 200 }}
-    class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
-    onclick={() => (showCreatePanel = false)}
-    aria-label="Fermer"
-  ></button>
-
-  <div
-    in:fly={{ x: 560, duration: 380, easing: quintOut }}
-    out:fly={{ x: 560, duration: 250, easing: cubicIn }}
-    class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-120 bg-white shadow-2xl flex flex-col overflow-hidden"
-  >
-    <!-- En-tête -->
-    <div
-      class="p-6 bg-linear-to-br from-violet-900 to-violet-700 relative overflow-hidden shrink-0"
-    >
-      <Plus class="absolute -right-4 -bottom-4 w-32 h-32 text-white/5" />
-      <div class="relative z-10 flex items-start justify-between gap-4">
-        <div class="flex items-center gap-3.5">
-          <div
-            class="w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center"
-          >
-            <Package class="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 class="text-lg font-bold text-white">Nouvel EPI</h2>
-            <p class="text-violet-300 text-xs mt-0.5">Définir un nouvel équipement</p>
-          </div>
-        </div>
-        <button
-          onclick={() => (showCreatePanel = false)}
-          class="p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors shrink-0"
-        >
-          <X class="w-4.5 h-4.5" />
-        </button>
-      </div>
-    </div>
-
-    <!-- Corps -->
-    <form
-      method="POST"
-      action="?/creer_modele"
-      use:enhance={({ cancel }) => {
-        if (!createDesignation || !createType) {
-          cancel();
-          return;
-        }
-        return ({ update }) => {
-          showCreatePanel = false;
-          update();
-        };
-      }}
-      class="flex-1 overflow-y-auto flex flex-col"
-    >
-      <div class="flex-1 p-6 space-y-5">
-        <!-- Désignation -->
-        <div class="space-y-1.5">
-          <!-- svelte-ignore a11y_label_has_associated_control -->
-          <label class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-            Désignation <span class="text-red-400">*</span>
-          </label>
-          <input
-            type="text"
-            name="designation"
-            bind:value={createDesignation}
-            placeholder="ex : Casque de chantier"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-sm
-              focus:outline-none focus:ring-2 focus:ring-violet-400/30 focus:border-violet-500 focus:bg-white transition-all"
-          />
-        </div>
-
-        <!-- Type -->
-        <div class="space-y-1.5">
-          <!-- svelte-ignore a11y_label_has_associated_control -->
-          <label class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-            Type <span class="text-red-400">*</span>
-          </label>
-          <input
-            type="text"
-            name="type"
-            bind:value={createType}
-            placeholder="ex : Protection tête"
-            list="types-existants"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-sm
-              focus:outline-none focus:ring-2 focus:ring-violet-400/30 focus:border-violet-500 focus:bg-white transition-all"
-          />
-          <datalist id="types-existants">
-            {#each allTypes as t (t)}
-              <option value={t}></option>
-            {/each}
-          </datalist>
-        </div>
-
-        <!-- Taille -->
-        <div class="space-y-1.5">
-          <!-- svelte-ignore a11y_label_has_associated_control -->
-          <label class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-            Taille <span class="text-slate-300 font-normal normal-case tracking-normal"
-              >(optionnel)</span
-            >
-          </label>
-          <input
-            type="text"
-            name="taille"
-            bind:value={createTaille}
-            placeholder="ex : M, L, XL, 42…"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-sm
-              focus:outline-none focus:ring-2 focus:ring-violet-400/30 focus:border-violet-500 focus:bg-white transition-all"
-          />
-        </div>
-
-        <!-- Stock total + Seuil alerte -->
-        <div class="grid grid-cols-2 gap-3">
-          <div class="space-y-1.5">
-            <!-- svelte-ignore a11y_label_has_associated_control -->
-            <label class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-              Stock total
-            </label>
-            <input
-              type="number"
-              name="stock_total"
-              bind:value={createStockTotal}
-              min="0"
-              class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-sm
-                focus:outline-none focus:ring-2 focus:ring-violet-400/30 focus:border-violet-500 focus:bg-white transition-all"
-            />
-          </div>
-          <div class="space-y-1.5">
-            <!-- svelte-ignore a11y_label_has_associated_control -->
-            <label class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-              Seuil d'alerte
-            </label>
-            <input
-              type="number"
-              name="seuil_alerte"
-              bind:value={createSeuilAlerte}
-              min="0"
-              class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-sm
-                focus:outline-none focus:ring-2 focus:ring-violet-400/30 focus:border-violet-500 focus:bg-white transition-all"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- Pied -->
-      <div class="shrink-0 px-6 py-4 border-t border-slate-100 bg-white flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={!createDesignation || !createType}
-          class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-violet-700 text-white text-sm font-bold hover:bg-violet-600 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <Plus class="w-4 h-4" />Créer l'EPI
-        </button>
-        <button
-          type="button"
-          onclick={() => (showCreatePanel = false)}
-          class="px-5 py-3 rounded-xl border border-slate-200 text-slate-500 text-sm font-medium hover:bg-slate-50 transition-colors"
-        >
-          Annuler
-        </button>
-      </div>
-    </form>
   </div>
 {/if}

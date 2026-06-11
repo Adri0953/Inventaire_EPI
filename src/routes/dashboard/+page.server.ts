@@ -39,7 +39,7 @@ export const load: PageServerLoad = async () => {
     supabase
       .from('controle')
       .select(
-        'id_controle, prochain_controle, epi(modele_epi(designation), attribution(date_retour, chauffeur(nom, prenom)))',
+        'id_controle, prochain_controle, epi(id_epi, modele_epi(designation), attribution(date_retour, chauffeur(nom, prenom)))',
       )
       .lte('prochain_controle', toDateStr(sevenDaysFromNow))
       .order('prochain_controle', { ascending: true }),
@@ -153,6 +153,7 @@ export const load: PageServerLoad = async () => {
           epi && (Array.isArray(epi.modele_epi) ? epi.modele_epi[0] : epi.modele_epi);
         return {
           ...c,
+          epi_id: (epi as { id_epi?: string } | null)?.id_epi ?? null,
           epi_nom: modeleEpi?.designation,
           chauffeur_nom: epi ? extractDriver(epi.attribution) : null,
         };

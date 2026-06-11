@@ -1,5 +1,6 @@
-﻿<script lang="ts">
+<script lang="ts">
   import type { PageData } from './$types';
+  import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import {
     TriangleAlert,
@@ -15,6 +16,7 @@
     UserCheck,
     PackagePlus,
     Activity,
+    ChevronRight,
   } from 'lucide-svelte';
 
   let { data }: { data: PageData } = $props();
@@ -122,8 +124,9 @@
           {#if alerts.expiring.length > 0}
             {#each alerts.expiring as epi (epi.id_epi)}
               {@const days = daysUntil(epi.date_expiration)}
-              <div
-                class="flex items-center justify-between p-4 rounded-2xl bg-white border border-red-50 hover:border-red-200 transition-all shadow-sm"
+              <button
+                onclick={() => goto(resolve('/epi') + '?fiche=' + epi.id_epi)}
+                class="w-full flex items-center justify-between p-4 rounded-2xl bg-white border border-red-50 hover:border-red-200 hover:bg-red-50/30 transition-all shadow-sm cursor-pointer group/row text-left"
               >
                 <div class="min-w-0">
                   <p class="font-bold text-sm text-blue-950 truncate">{epi.nom}</p>
@@ -132,32 +135,35 @@
                     {epi.chauffeur_nom || 'Non attribué'}
                   </p>
                 </div>
-                <div class="text-right shrink-0">
-                  <p
-                    class="text-[10px] font-bold text-slate-400 tabular-nums uppercase tracking-tighter"
-                  >
-                    {formatDate(epi.date_expiration)}
-                  </p>
-                  {#if days <= 0}
-                    <div
-                      class="mt-1 px-2.5 py-0.5 bg-red-600 text-[9px] font-black text-white rounded-full shadow-lg shadow-red-200"
+                <div class="flex items-center gap-2 shrink-0">
+                  <div class="text-right">
+                    <p
+                      class="text-[10px] font-bold text-slate-400 tabular-nums uppercase tracking-tighter"
                     >
-                      EXPIRÉ
-                    </div>
-                  {:else}
-                    <span class="text-sm font-black {days <= 7 ? 'text-red-500' : 'text-slate-600'}"
-                      >J-{days}</span
-                    >
-                  {/if}
+                      {formatDate(epi.date_expiration)}
+                    </p>
+                    {#if days <= 0}
+                      <div
+                        class="mt-1 px-2.5 py-0.5 bg-red-600 text-[9px] font-black text-white rounded-full shadow-lg shadow-red-200"
+                      >
+                        EXPIRÉ
+                      </div>
+                    {:else}
+                      <span class="text-sm font-black {days <= 7 ? 'text-red-500' : 'text-slate-600'}"
+                        >J-{days}</span
+                      >
+                    {/if}
+                  </div>
+                  <ChevronRight class="w-5 h-5 text-red-400 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all shrink-0" />
                 </div>
-              </div>
+              </button>
             {/each}
-          {:else}
-            <div class="h-full flex flex-col items-center justify-center gap-3 opacity-30">
-              <ShieldCheck class="w-12 h-12 text-slate-400" />
-              <p class="text-xs font-black uppercase tracking-widest">Tout est en règle</p>
-            </div>
-          {/if}
+            {:else}
+              <div class="h-full flex flex-col items-center justify-center gap-3 opacity-30">
+                <ShieldCheck class="w-12 h-12 text-slate-400" />
+                <p class="text-xs font-black uppercase tracking-widest">Tout est en règle</p>
+              </div>
+            {/if}
         </div>
       </div>
 
@@ -182,8 +188,9 @@
           {#if alerts.controls.length > 0}
             {#each alerts.controls as ctrl (ctrl.id_controle)}
               {@const days = daysUntil(ctrl.prochain_controle)}
-              <div
-                class="flex items-center justify-between p-4 rounded-2xl bg-white border border-orange-50 hover:border-orange-200 transition-all shadow-sm"
+              <button
+                onclick={() => ctrl.epi_id ? goto(resolve('/epi') + '?fiche=' + ctrl.epi_id) : goto(resolve('/epi'))}
+                class="w-full flex items-center justify-between p-4 rounded-2xl bg-white border border-orange-50 hover:border-orange-200 hover:bg-orange-50/30 transition-all shadow-sm cursor-pointer group/row text-left"
               >
                 <div class="min-w-0">
                   <p class="font-bold text-sm text-blue-950 truncate">
@@ -194,23 +201,26 @@
                     {ctrl.chauffeur_nom || 'En stock'}
                   </p>
                 </div>
-                <div class="text-right shrink-0 font-black">
-                  <p
-                    class="text-[10px] font-bold text-slate-400 tabular-nums uppercase tracking-tighter"
-                  >
-                    {formatDate(ctrl.prochain_controle)}
-                  </p>
-                  {#if days <= 0}
-                    <div
-                      class="mt-1 px-2.5 py-0.5 bg-orange-500 text-[9px] font-black text-white rounded-full uppercase shadow-lg shadow-orange-200"
+                <div class="flex items-center gap-2 shrink-0">
+                  <div class="text-right font-black">
+                    <p
+                      class="text-[10px] font-bold text-slate-400 tabular-nums uppercase tracking-tighter"
                     >
-                      Retard
-                    </div>
-                  {:else}
-                    <span class="text-sm text-orange-600">J-{days}</span>
-                  {/if}
+                      {formatDate(ctrl.prochain_controle)}
+                    </p>
+                    {#if days <= 0}
+                      <div
+                        class="mt-1 px-2.5 py-0.5 bg-orange-500 text-[9px] font-black text-white rounded-full uppercase shadow-lg shadow-orange-200"
+                      >
+                        Retard
+                      </div>
+                    {:else}
+                      <span class="text-sm text-orange-600">J-{days}</span>
+                    {/if}
+                  </div>
+                  <ChevronRight class="w-5 h-5 text-orange-400 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all shrink-0" />
                 </div>
-              </div>
+              </button>
             {/each}
           {:else}
             <div class="h-full flex flex-col items-center justify-center gap-3 opacity-30">
@@ -262,9 +272,10 @@
                     : 0}
                 {@const severity =
                   epi.stock_total === 0 ? 'rupture' : pct <= 40 ? 'critique' : 'bas'}
-                <div
-                  class="grid items-center gap-4 px-5 py-3.5 border-b border-slate-50 hover:bg-slate-50 transition-colors"
-                  style="grid-template-columns: 72px 1fr 110px 90px 120px"
+                <button
+                  onclick={() => goto(resolve('/epi'))}
+                  class="w-full grid items-center gap-4 px-5 py-3.5 border-b border-slate-50 hover:bg-amber-50/40 transition-colors cursor-pointer group/row text-left"
+                  style="grid-template-columns: 72px 1fr 110px 90px 120px 24px"
                 >
                   {#if severity === 'rupture'}
                     <span
@@ -309,7 +320,8 @@
                       style="width: {pct}%"
                     ></div>
                   </div>
-                </div>
+                  <ChevronRight class="w-5 h-5 text-amber-500 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all justify-self-center" />
+                </button>
               {/each}
             {:else}
               <div class="flex flex-col items-center justify-center gap-3 py-10 opacity-30">
@@ -543,9 +555,12 @@
       </div>
       <div class="divide-y divide-slate-50">
         {#each activity.assignments as item (item.id_attribution)}
-          <div class="px-8 py-5 flex items-center gap-4 hover:bg-slate-50/50 transition-colors">
+          <button
+            onclick={() => goto(resolve('/attributions') + '?fiche=' + item.id_attribution)}
+            class="w-full px-8 py-5 flex items-center gap-4 hover:bg-emerald-50/50 transition-colors cursor-pointer group/row text-left"
+          >
             <div
-              class="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center font-black text-emerald-700 text-sm"
+              class="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center font-black text-emerald-700 text-sm shrink-0"
             >
               {item.chauffeur_nom?.[0]?.toUpperCase()}
             </div>
@@ -553,10 +568,13 @@
               <p class="text-sm font-bold text-slate-900 truncate">{item.epi_nom}</p>
               <p class="text-xs text-slate-500 mt-0.5">{item.chauffeur_nom}</p>
             </div>
-            <span class="text-xs font-bold text-emerald-400 tabular-nums whitespace-nowrap"
-              >{relativeDate(item.date_attribution)}</span
-            >
-          </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-xs font-bold text-emerald-400 tabular-nums whitespace-nowrap"
+                >{relativeDate(item.date_attribution)}</span
+              >
+              <ChevronRight class="w-5 h-5 text-emerald-500 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all" />
+            </div>
+          </button>
         {/each}
       </div>
     </div>
@@ -568,17 +586,21 @@
           <History class="w-5 h-5 text-yellow-400" />
           <h3 class="font-bold text-slate-800">Flux Inventaire</h3>
         </div>
-        <button
+        <a
+          href={resolve('/epi')}
           class="text-[10px] font-black text-slate-400 uppercase hover:text-slate-900 transition-colors"
-          >Voir tout</button
+          >Voir tout</a
         >
       </div>
       <div class="divide-y divide-slate-50">
         {#each activity.movements as item (item.id_historique)}
           {@const variation = item.nouvelle_valeur - item.ancienne_valeur}
-          <div class="px-8 py-5 flex items-center gap-4 hover:bg-slate-50/50 transition-colors">
+          <a
+            href={resolve('/epi')}
+            class="px-8 py-5 flex items-center gap-4 hover:bg-yellow-50/50 transition-colors group/row"
+          >
             <div
-              class="w-10 h-10 rounded-2xl flex items-center justify-center {variation > 0 ? 'bg-yellow-100 text-yellow-500' : 'bg-amber-200 text-amber-600'}"
+              class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 {variation > 0 ? 'bg-yellow-100 text-yellow-500' : 'bg-amber-200 text-amber-600'}"
             >
               {#if variation > 0}
                 <TrendingUp class="w-5 h-5" />
@@ -595,12 +617,15 @@
                 >
               </p>
             </div>
-            <span
-              class="font-black text-sm shrink-0 {variation > 0 ? 'text-emerald-600' : 'text-red-500'}"
-            >
-              {variation > 0 ? '+' : ''}{variation}
-            </span>
-          </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span
+                class="font-black text-sm {variation > 0 ? 'text-emerald-600' : 'text-red-500'}"
+              >
+                {variation > 0 ? '+' : ''}{variation}
+              </span>
+              <ChevronRight class="w-5 h-5 text-yellow-500 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all" />
+            </div>
+          </a>
         {/each}
       </div>
     </div>

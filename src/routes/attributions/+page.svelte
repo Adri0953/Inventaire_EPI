@@ -215,6 +215,15 @@
     }
   }
 
+  let handledFiche = $state<string | null>(null);
+  $effect(() => {
+    const fiche = $page.url.searchParams.get('fiche');
+    if (fiche && fiche !== handledFiche && data.attributions.some((a) => a.id_attribution === fiche)) {
+      handledFiche = fiche;
+      openAttr(fiche);
+    }
+  });
+
   let handledChauffeurParam = $state<string | null>(null);
   $effect(() => {
     const chauffeurParam = $page.url.searchParams.get('chauffeur');
