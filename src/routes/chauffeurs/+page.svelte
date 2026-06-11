@@ -108,7 +108,7 @@
   let filterActivite = $state('');
 
   type SortCol = 'nom' | 'activite' | 'epis' | 'statut' | 'expiration';
-  let sortCol = $state<SortCol>('nom');
+  let sortCol = $state<SortCol>('statut');
   let sortDir = $state<'asc' | 'desc'>('asc');
 
   function toggleSort(col: SortCol) {
@@ -393,7 +393,10 @@
     </select>
     {#if filterStatus || filterActivite}
       <button
-        onclick={() => { filterStatus = ''; filterActivite = ''; }}
+        onclick={() => {
+          filterStatus = '';
+          filterActivite = '';
+        }}
         class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-100 text-blue-700 text-sm font-bold hover:bg-blue-200 transition-colors"
       >
         <X class="w-3.5 h-3.5" />Effacer les filtres
@@ -470,7 +473,9 @@
         <!-- Activité -->
         <div class="flex justify-center">
           {#if c.activite}
-            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-xs font-semibold text-slate-600 truncate max-w-full">
+            <span
+              class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-xs font-semibold text-slate-600 truncate max-w-full"
+            >
               {c.activite}
             </span>
           {:else}
@@ -546,7 +551,10 @@
                 confirmLabel: 'Supprimer',
                 confirmVariant: 'danger',
               });
-              if (!ok) { cancel(); return; }
+              if (!ok) {
+                cancel();
+                return;
+              }
               return ({ update }) => update();
             }}
           >
@@ -855,7 +863,8 @@
               <div class="space-y-1.5">
                 <label
                   for="edit-prenom"
-                  class="text-xs font-black uppercase tracking-widest text-slate-500 block">Prénom</label
+                  class="text-xs font-black uppercase tracking-widest text-slate-500 block"
+                  >Prénom</label
                 >
                 <input
                   id="edit-prenom"
@@ -868,7 +877,8 @@
               <div class="space-y-1.5">
                 <label
                   for="edit-nom"
-                  class="text-xs font-black uppercase tracking-widest text-slate-500 block">Nom</label
+                  class="text-xs font-black uppercase tracking-widest text-slate-500 block"
+                  >Nom</label
                 >
                 <input
                   id="edit-nom"
@@ -882,7 +892,8 @@
             <div class="space-y-1.5">
               <label
                 for="edit-activite"
-                class="text-xs font-black uppercase tracking-widest text-slate-500 block">Activité</label
+                class="text-xs font-black uppercase tracking-widest text-slate-500 block"
+                >Activité</label
               >
               <select
                 id="edit-activite"
@@ -899,417 +910,435 @@
           </form>
         </div>
       {:else}
-
-      <!-- ── Liste des EPI ─────────────────────────────────────────── -->
-      <div class="p-5 space-y-4">
-        <div class="flex items-center justify-between">
-          <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">
-            EPI attribués ({selectedDriver.epis.length})
-          </p>
-        </div>
-
-        {#if selectedDriver.epis.length === 0}
-          <div class="flex flex-col items-center gap-2 py-8 opacity-30">
-            <Package class="w-10 h-10 text-slate-400" />
-            <p class="text-xs font-black uppercase tracking-widest">Aucun EPI attribué</p>
+        <!-- ── Liste des EPI ─────────────────────────────────────────── -->
+        <div class="p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              EPI attribués ({selectedDriver.epis.length})
+            </p>
           </div>
-        {:else}
-          {#snippet epiCard(epi: (typeof selectedDriver.epis)[0])}
-            {@const status = getEpiStatus(epi)}
-            {@const days = epi.date_expiration ? daysUntil(epi.date_expiration) : null}
-            {@const controlDays = epi.prochain_controle ? daysUntil(epi.prochain_controle) : null}
-            <div
-              class="rounded-2xl border bg-white shadow-sm
-                {status === 'expired' || status === 'control_overdue'
-                ? 'border-red-200'
-                : status === 'expiring_soon' || status === 'control_soon'
-                  ? 'border-orange-200'
-                  : 'border-slate-100'}"
-            >
-              <div class="flex">
-                <div
-                  role="button"
-                  tabindex="0"
-                  onclick={() => goto('/epi?fiche=' + epi.id_epi)}
-                  onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && goto('/epi?fiche=' + epi.id_epi)}
-                  class="flex-1 min-w-0 cursor-pointer hover:bg-slate-50/60 transition-colors rounded-l-2xl"
-                >
-                  <div class="px-3 py-3 flex items-start gap-2">
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center gap-1.5 flex-wrap">
-                        <p class="font-bold text-sm text-slate-900">{epi.designation}</p>
-                        {#if epi.taille}
-                          <span
-                            class="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full"
-                            >{epi.taille}</span
-                          >
-                        {/if}
-                      </div>
-                      <p
-                        class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5"
-                      >
-                        {epi.type}
-                      </p>
 
-                      {#if status === 'expired'}
-                        <p
-                          class="text-[10px] font-bold text-red-500 mt-1.5 flex items-center gap-1"
-                        >
-                          <Clock class="w-3 h-3 shrink-0" />{formatDate(epi.date_expiration)}
-                        </p>
-                      {:else if status === 'control_overdue'}
-                        <p
-                          class="text-[10px] font-bold text-red-600 mt-1.5 flex items-center gap-1"
-                        >
-                          <Wrench class="w-3 h-3 shrink-0" />Contrôle dû le {formatDate(
-                            epi.prochain_controle,
-                          )}
-                        </p>
-                      {:else if status === 'expiring_soon'}
-                        <p
-                          class="text-[10px] font-bold text-orange-500 mt-1.5 flex items-center gap-1"
-                        >
-                          <Clock class="w-3 h-3 shrink-0" />Dans {days} jour{days !== 1 ? 's' : ''} · {formatDate(
-                            epi.date_expiration,
-                          )}
-                        </p>
-                      {:else if status === 'control_soon'}
-                        <p
-                          class="text-[10px] font-bold text-amber-500 mt-1.5 flex items-center gap-1"
-                        >
-                          <Wrench class="w-3 h-3 shrink-0" />Contrôle dans {controlDays} jour{controlDays !== 1 ? 's' : ''} · {formatDate(
-                            epi.prochain_controle,
-                          )}
-                        </p>
-                      {:else if epi.date_expiration || epi.prochain_controle}
-                        <div class="flex items-center gap-3 mt-1 flex-wrap">
-                          {#if epi.date_expiration}
+          {#if selectedDriver.epis.length === 0}
+            <div class="flex flex-col items-center gap-2 py-8 opacity-30">
+              <Package class="w-10 h-10 text-slate-400" />
+              <p class="text-xs font-black uppercase tracking-widest">Aucun EPI attribué</p>
+            </div>
+          {:else}
+            {#snippet epiCard(epi: (typeof selectedDriver.epis)[0])}
+              {@const status = getEpiStatus(epi)}
+              {@const days = epi.date_expiration ? daysUntil(epi.date_expiration) : null}
+              {@const controlDays = epi.prochain_controle ? daysUntil(epi.prochain_controle) : null}
+              <div
+                class="rounded-2xl border bg-white shadow-sm
+                {status === 'expired' || status === 'control_overdue'
+                  ? 'border-red-200'
+                  : status === 'expiring_soon' || status === 'control_soon'
+                    ? 'border-orange-200'
+                    : 'border-slate-100'}"
+              >
+                <div class="flex">
+                  <div
+                    role="button"
+                    tabindex="0"
+                    onclick={() => goto('/epi?fiche=' + epi.id_epi)}
+                    onkeydown={(e) =>
+                      (e.key === 'Enter' || e.key === ' ') && goto('/epi?fiche=' + epi.id_epi)}
+                    class="flex-1 min-w-0 cursor-pointer hover:bg-slate-50/60 transition-colors rounded-l-2xl"
+                  >
+                    <div class="px-3 py-3 flex items-start gap-2">
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                          <p class="font-bold text-sm text-slate-900">{epi.designation}</p>
+                          {#if epi.taille}
                             <span
-                              class="text-[10px] text-slate-300 font-medium flex items-center gap-0.5"
+                              class="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full"
+                              >{epi.taille}</span
                             >
-                              <Clock class="w-3 h-3" />{formatDate(epi.date_expiration)}
-                            </span>
-                          {/if}
-                          {#if epi.prochain_controle}
-                            <span
-                              class="text-[10px] text-slate-300 font-medium flex items-center gap-0.5"
-                            >
-                              <Wrench class="w-3 h-3" />{formatDate(epi.prochain_controle)}
-                            </span>
                           {/if}
                         </div>
-                      {/if}
-                    </div>
-
-                    <div class="flex items-center gap-1 shrink-0 mt-0.5">
-                      <span
-                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black whitespace-nowrap
-                          {status === 'expired'
-                          ? 'bg-red-100 text-red-600'
-                          : status === 'control_overdue'
-                            ? 'bg-red-50 border border-red-200 text-red-700'
-                            : status === 'expiring_soon'
-                              ? 'bg-orange-100 text-orange-600'
-                              : status === 'control_soon'
-                                ? 'bg-amber-100 text-amber-600'
-                                : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}"
-                      >
-                        {#if status === 'expired'}
-                          <TriangleAlert class="w-2.5 h-2.5" />Expiré
-                        {:else if status === 'control_overdue'}
-                          <Wrench class="w-2.5 h-2.5" />Contrôle dépassé
-                        {:else if status === 'expiring_soon'}
-                          <Clock class="w-2.5 h-2.5" />Expiration proche
-                        {:else if status === 'control_soon'}
-                          <Wrench class="w-2.5 h-2.5" />Contrôle proche
-                        {:else}
-                          <ShieldCheck class="w-2.5 h-2.5" />En ordre
-                        {/if}
-                      </span>
-
-                      <div role="none" class="relative" onclick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          onclick={() => toggleEpiMenu(epi.id_attribution)}
-                          class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                        <p
+                          class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5"
                         >
-                          <Ellipsis class="w-4 h-4" />
-                        </button>
+                          {epi.type}
+                        </p>
 
-                        {#if epiMenuOpen[epi.id_attribution]}
-                          <div
-                            class="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-10"
+                        {#if status === 'expired'}
+                          <p
+                            class="text-[10px] font-bold text-red-500 mt-1.5 flex items-center gap-1"
                           >
-                            <form
-                              method="POST"
-                              action="?/retirer_epi"
-                              use:enhance={async ({ cancel }) => {
-                                const ok = await confirmAction({
-                                  title: "Retirer l'EPI",
-                                  message: `Retirer "${epi.designation}" de ce chauffeur ?`,
-                                  confirmLabel: 'Retirer',
-                                  confirmVariant: 'danger',
-                                });
-                                if (!ok) { cancel(); return; }
-                                return ({ update }) => {
-                                  epiMenuOpen = {};
-                                  update();
-                                };
-                              }}
-                            >
-                              <input
-                                type="hidden"
-                                name="id_attribution"
-                                value={epi.id_attribution}
-                              />
-                              <input type="hidden" name="id_epi" value={epi.id_epi} />
-                              <button
-                                type="submit"
-                                class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-colors text-left"
+                            <Clock class="w-3 h-3 shrink-0" />{formatDate(epi.date_expiration)}
+                          </p>
+                        {:else if status === 'control_overdue'}
+                          <p
+                            class="text-[10px] font-bold text-red-600 mt-1.5 flex items-center gap-1"
+                          >
+                            <Wrench class="w-3 h-3 shrink-0" />Contrôle dû le {formatDate(
+                              epi.prochain_controle,
+                            )}
+                          </p>
+                        {:else if status === 'expiring_soon'}
+                          <p
+                            class="text-[10px] font-bold text-orange-500 mt-1.5 flex items-center gap-1"
+                          >
+                            <Clock class="w-3 h-3 shrink-0" />Dans {days} jour{days !== 1
+                              ? 's'
+                              : ''} · {formatDate(epi.date_expiration)}
+                          </p>
+                        {:else if status === 'control_soon'}
+                          <p
+                            class="text-[10px] font-bold text-amber-500 mt-1.5 flex items-center gap-1"
+                          >
+                            <Wrench class="w-3 h-3 shrink-0" />Contrôle dans {controlDays} jour{controlDays !==
+                            1
+                              ? 's'
+                              : ''} · {formatDate(epi.prochain_controle)}
+                          </p>
+                        {:else if epi.date_expiration || epi.prochain_controle}
+                          <div class="flex items-center gap-3 mt-1 flex-wrap">
+                            {#if epi.date_expiration}
+                              <span
+                                class="text-[10px] text-slate-300 font-medium flex items-center gap-0.5"
                               >
-                                <X class="w-3.5 h-3.5" />Retirer
-                              </button>
-                            </form>
-                            {#if status !== 'expired'}
-                            <form
-                              method="POST"
-                              action="?/hors_service"
-                              use:enhance={async ({ cancel }) => {
-                                const ok = await confirmAction({
-                                  title: 'Mettre hors service',
-                                  message: `Marquer "${epi.designation}" comme hors service ? Il sera désattribué et le stock diminuera de 1.`,
-                                  confirmLabel: 'Confirmer',
-                                  confirmVariant: 'danger',
-                                });
-                                if (!ok) { cancel(); return; }
-                                return ({ update }) => {
-                                  epiMenuOpen = {};
-                                  update();
-                                };
-                              }}
-                            >
-                              <input
-                                type="hidden"
-                                name="id_attribution"
-                                value={epi.id_attribution}
-                              />
-                              <input type="hidden" name="id_epi" value={epi.id_epi} />
-                              <button
-                                type="submit"
-                                class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-red-600 hover:bg-red-50 transition-colors text-left"
-                              >
-                                <ShieldX class="w-3.5 h-3.5" />Hors service
-                              </button>
-                            </form>
+                                <Clock class="w-3 h-3" />{formatDate(epi.date_expiration)}
+                              </span>
                             {/if}
-                            <button
-                              type="button"
-                              onclick={() => {
-                                toggleEpiTransfer(epi.id_attribution);
-                                epiMenuOpen = {};
-                              }}
-                              class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 transition-colors text-left"
-                            >
-                              <ArrowRightLeft class="w-3.5 h-3.5" />Transférer
-                            </button>
+                            {#if epi.prochain_controle}
+                              <span
+                                class="text-[10px] text-slate-300 font-medium flex items-center gap-0.5"
+                              >
+                                <Wrench class="w-3 h-3" />{formatDate(epi.prochain_controle)}
+                              </span>
+                            {/if}
                           </div>
                         {/if}
                       </div>
+
+                      <div class="flex items-center gap-1 shrink-0 mt-0.5">
+                        <span
+                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black whitespace-nowrap
+                          {status === 'expired'
+                            ? 'bg-red-100 text-red-600'
+                            : status === 'control_overdue'
+                              ? 'bg-red-50 border border-red-200 text-red-700'
+                              : status === 'expiring_soon'
+                                ? 'bg-orange-100 text-orange-600'
+                                : status === 'control_soon'
+                                  ? 'bg-amber-100 text-amber-600'
+                                  : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}"
+                        >
+                          {#if status === 'expired'}
+                            <TriangleAlert class="w-2.5 h-2.5" />Expiré
+                          {:else if status === 'control_overdue'}
+                            <Wrench class="w-2.5 h-2.5" />Contrôle dépassé
+                          {:else if status === 'expiring_soon'}
+                            <Clock class="w-2.5 h-2.5" />Expiration proche
+                          {:else if status === 'control_soon'}
+                            <Wrench class="w-2.5 h-2.5" />Contrôle proche
+                          {:else}
+                            <ShieldCheck class="w-2.5 h-2.5" />En ordre
+                          {/if}
+                        </span>
+
+                        <div role="none" class="relative" onclick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onclick={() => toggleEpiMenu(epi.id_attribution)}
+                            class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                          >
+                            <Ellipsis class="w-4 h-4" />
+                          </button>
+
+                          {#if epiMenuOpen[epi.id_attribution]}
+                            <div
+                              class="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-10"
+                            >
+                              <form
+                                method="POST"
+                                action="?/retirer_epi"
+                                use:enhance={async ({ cancel }) => {
+                                  const ok = await confirmAction({
+                                    title: "Retirer l'EPI",
+                                    message: `Retirer "${epi.designation}" de ce chauffeur ?`,
+                                    confirmLabel: 'Retirer',
+                                    confirmVariant: 'danger',
+                                  });
+                                  if (!ok) {
+                                    cancel();
+                                    return;
+                                  }
+                                  return ({ update }) => {
+                                    epiMenuOpen = {};
+                                    update();
+                                  };
+                                }}
+                              >
+                                <input
+                                  type="hidden"
+                                  name="id_attribution"
+                                  value={epi.id_attribution}
+                                />
+                                <input type="hidden" name="id_epi" value={epi.id_epi} />
+                                <button
+                                  type="submit"
+                                  class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-colors text-left"
+                                >
+                                  <X class="w-3.5 h-3.5" />Retirer
+                                </button>
+                              </form>
+                              {#if status !== 'expired'}
+                                <form
+                                  method="POST"
+                                  action="?/hors_service"
+                                  use:enhance={async ({ cancel }) => {
+                                    const ok = await confirmAction({
+                                      title: 'Mettre hors service',
+                                      message: `Marquer "${epi.designation}" comme hors service ? Il sera désattribué et le stock diminuera de 1.`,
+                                      confirmLabel: 'Confirmer',
+                                      confirmVariant: 'danger',
+                                    });
+                                    if (!ok) {
+                                      cancel();
+                                      return;
+                                    }
+                                    return ({ update }) => {
+                                      epiMenuOpen = {};
+                                      update();
+                                    };
+                                  }}
+                                >
+                                  <input
+                                    type="hidden"
+                                    name="id_attribution"
+                                    value={epi.id_attribution}
+                                  />
+                                  <input type="hidden" name="id_epi" value={epi.id_epi} />
+                                  <button
+                                    type="submit"
+                                    class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-red-600 hover:bg-red-50 transition-colors text-left"
+                                  >
+                                    <ShieldX class="w-3.5 h-3.5" />Hors service
+                                  </button>
+                                </form>
+                              {/if}
+                              <button
+                                type="button"
+                                onclick={() => {
+                                  toggleEpiTransfer(epi.id_attribution);
+                                  epiMenuOpen = {};
+                                }}
+                                class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 transition-colors text-left"
+                              >
+                                <ArrowRightLeft class="w-3.5 h-3.5" />Transférer
+                              </button>
+                            </div>
+                          {/if}
+                        </div>
+                      </div>
                     </div>
                   </div>
+                </div>
+
+                {#if epiTransferOpen[epi.id_attribution]}
+                  <div class="px-4 pb-4 bg-indigo-50/50 border-t border-indigo-100">
+                    <form
+                      method="POST"
+                      action="?/transferer_epi"
+                      use:enhance={({ cancel }) => {
+                        if (!epiTransferTargets[epi.id_attribution]) {
+                          cancel();
+                          return;
+                        }
+                        return ({ update }) => {
+                          epiTransferOpen = { ...epiTransferOpen, [epi.id_attribution]: false };
+                          update();
+                        };
+                      }}
+                      class="flex gap-2 pt-3"
+                    >
+                      <input type="hidden" name="id_attribution" value={epi.id_attribution} />
+                      <input type="hidden" name="id_epi" value={epi.id_epi} />
+                      <select
+                        name="id_chauffeur_dest"
+                        bind:value={epiTransferTargets[epi.id_attribution]}
+                        class="flex-1 px-3 py-2 rounded-xl border border-indigo-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+                      >
+                        <option value="">Choisir un chauffeur…</option>
+                        {#each otherDrivers as d (d.id_chauffeur)}
+                          <option value={d.id_chauffeur}>{d.nom} {d.prenom}</option>
+                        {/each}
+                      </select>
+                      <button
+                        type="submit"
+                        disabled={!epiTransferTargets[epi.id_attribution]}
+                        class="px-3 py-2 rounded-xl bg-indigo-700 text-white text-xs font-black hover:bg-indigo-600 transition-colors disabled:opacity-40 shrink-0"
+                      >
+                        OK
+                      </button>
+                    </form>
+                  </div>
+                {/if}
               </div>
+            {/snippet}
+
+            <!-- Résumé par statut / filtres -->
+            <div class="flex items-center gap-2 flex-wrap pb-2">
+              {#if epiStatusCounts.expired > 0}
+                <button
+                  onclick={() => toggleFilter('expired')}
+                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold transition-all cursor-pointer
+                  {activeFilter === 'expired'
+                    ? 'bg-red-500 border-red-500 text-white shadow-md scale-105'
+                    : 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200'}"
+                >
+                  <TriangleAlert class="w-3.5 h-3.5" />{epiStatusCounts.expired} expiré{epiStatusCounts.expired >
+                  1
+                    ? 's'
+                    : ''}
+                </button>
+              {/if}
+              {#if epiStatusCounts.control_overdue > 0}
+                <button
+                  onclick={() => toggleFilter('control_overdue')}
+                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold transition-all cursor-pointer
+                  {activeFilter === 'control_overdue'
+                    ? 'bg-red-800 border-red-800 text-white shadow-md scale-105'
+                    : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'}"
+                >
+                  <Wrench class="w-3.5 h-3.5" />{epiStatusCounts.control_overdue} contrôle{epiStatusCounts.control_overdue >
+                  1
+                    ? 's'
+                    : ''} dépassé{epiStatusCounts.control_overdue > 1 ? 's' : ''}
+                </button>
+              {/if}
+              {#if epiStatusCounts.expiring_soon > 0}
+                <button
+                  onclick={() => toggleFilter('expiring_soon')}
+                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold transition-all cursor-pointer
+                  {activeFilter === 'expiring_soon'
+                    ? 'bg-orange-400 border-orange-400 text-white shadow-md scale-105'
+                    : 'bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200'}"
+                >
+                  <Clock class="w-3.5 h-3.5" />{epiStatusCounts.expiring_soon} expiration{epiStatusCounts.expiring_soon >
+                  1
+                    ? 's'
+                    : ''} proche{epiStatusCounts.expiring_soon > 1 ? 's' : ''}
+                </button>
+              {/if}
+              {#if epiStatusCounts.control_soon > 0}
+                <button
+                  onclick={() => toggleFilter('control_soon')}
+                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold transition-all cursor-pointer
+                  {activeFilter === 'control_soon'
+                    ? 'bg-amber-400 border-amber-400 text-white shadow-md scale-105'
+                    : 'bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200'}"
+                >
+                  <Wrench class="w-3.5 h-3.5" />{epiStatusCounts.control_soon} contrôle{epiStatusCounts.control_soon >
+                  1
+                    ? 's'
+                    : ''} proche{epiStatusCounts.control_soon > 1 ? 's' : ''}
+                </button>
+              {/if}
+              {#if epiStatusCounts.ok > 0}
+                <button
+                  onclick={() => toggleFilter('ok')}
+                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold transition-all cursor-pointer
+                  {activeFilter === 'ok'
+                    ? 'bg-emerald-500 border-emerald-500 text-white shadow-md scale-105'
+                    : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'}"
+                >
+                  <ShieldCheck class="w-3.5 h-3.5" />{epiStatusCounts.ok} en ordre
+                </button>
+              {/if}
             </div>
 
-            {#if epiTransferOpen[epi.id_attribution]}
-              <div class="px-4 pb-4 bg-indigo-50/50 border-t border-indigo-100">
-                <form
-                  method="POST"
-                  action="?/transferer_epi"
-                  use:enhance={({ cancel }) => {
-                    if (!epiTransferTargets[epi.id_attribution]) {
-                      cancel();
-                      return;
-                    }
-                    return ({ update }) => {
-                      epiTransferOpen = { ...epiTransferOpen, [epi.id_attribution]: false };
-                      update();
-                    };
-                  }}
-                  class="flex gap-2 pt-3"
-                >
-                  <input type="hidden" name="id_attribution" value={epi.id_attribution} />
-                  <input type="hidden" name="id_epi" value={epi.id_epi} />
-                  <select
-                    name="id_chauffeur_dest"
-                    bind:value={epiTransferTargets[epi.id_attribution]}
-                    class="flex-1 px-3 py-2 rounded-xl border border-indigo-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-                  >
-                    <option value="">Choisir un chauffeur…</option>
-                    {#each otherDrivers as d (d.id_chauffeur)}
-                      <option value={d.id_chauffeur}>{d.nom} {d.prenom}</option>
-                    {/each}
-                  </select>
-                  <button
-                    type="submit"
-                    disabled={!epiTransferTargets[epi.id_attribution]}
-                    class="px-3 py-2 rounded-xl bg-indigo-700 text-white text-xs font-black hover:bg-indigo-600 transition-colors disabled:opacity-40 shrink-0"
-                  >
-                    OK
-                  </button>
-                </form>
-              </div>
-            {/if}
-          </div>
-          {/snippet}
-
-          <!-- Résumé par statut / filtres -->
-          <div class="flex items-center gap-2 flex-wrap pb-2">
-            {#if epiStatusCounts.expired > 0}
-              <button
-                onclick={() => toggleFilter('expired')}
-                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold transition-all cursor-pointer
-                  {activeFilter === 'expired'
-                  ? 'bg-red-500 border-red-500 text-white shadow-md scale-105'
-                  : 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200'}"
-              >
-                <TriangleAlert class="w-3.5 h-3.5" />{epiStatusCounts.expired} expiré{epiStatusCounts.expired >
-                1
-                  ? 's'
-                  : ''}
-              </button>
-            {/if}
-            {#if epiStatusCounts.control_overdue > 0}
-              <button
-                onclick={() => toggleFilter('control_overdue')}
-                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold transition-all cursor-pointer
-                  {activeFilter === 'control_overdue'
-                  ? 'bg-red-800 border-red-800 text-white shadow-md scale-105'
-                  : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'}"
-              >
-                <Wrench class="w-3.5 h-3.5" />{epiStatusCounts.control_overdue} contrôle{epiStatusCounts.control_overdue > 1 ? 's' : ''} dépassé{epiStatusCounts.control_overdue > 1 ? 's' : ''}
-              </button>
-            {/if}
-            {#if epiStatusCounts.expiring_soon > 0}
-              <button
-                onclick={() => toggleFilter('expiring_soon')}
-                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold transition-all cursor-pointer
-                  {activeFilter === 'expiring_soon'
-                  ? 'bg-orange-400 border-orange-400 text-white shadow-md scale-105'
-                  : 'bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200'}"
-              >
-                <Clock class="w-3.5 h-3.5" />{epiStatusCounts.expiring_soon} expiration{epiStatusCounts.expiring_soon > 1 ? 's' : ''} proche{epiStatusCounts.expiring_soon > 1 ? 's' : ''}
-              </button>
-            {/if}
-            {#if epiStatusCounts.control_soon > 0}
-              <button
-                onclick={() => toggleFilter('control_soon')}
-                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold transition-all cursor-pointer
-                  {activeFilter === 'control_soon'
-                  ? 'bg-amber-400 border-amber-400 text-white shadow-md scale-105'
-                  : 'bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200'}"
-              >
-                <Wrench class="w-3.5 h-3.5" />{epiStatusCounts.control_soon} contrôle{epiStatusCounts.control_soon > 1 ? 's' : ''} proche{epiStatusCounts.control_soon > 1 ? 's' : ''}
-              </button>
-            {/if}
-            {#if epiStatusCounts.ok > 0}
-              <button
-                onclick={() => toggleFilter('ok')}
-                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold transition-all cursor-pointer
-                  {activeFilter === 'ok'
-                  ? 'bg-emerald-500 border-emerald-500 text-white shadow-md scale-105'
-                  : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'}"
-              >
-                <ShieldCheck class="w-3.5 h-3.5" />{epiStatusCounts.ok} en ordre
-              </button>
-            {/if}
-          </div>
-
-          <div class="space-y-2">
-            {#each filteredEpis as epi (epi.id_attribution)}
-              <div in:fly={{ y: 8, duration: 200 }} out:fade={{ duration: 120 }}>
-                {@render epiCard(epi)}
-              </div>
-            {/each}
-          </div>
-        {/if}
-      </div>
-
-      <!-- ── EPI manquants ─────────────────────────────────────────── -->
-      {#if getMissingEpis(selectedDriver).length > 0}
-        <div class="px-5 pb-5">
-          <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <p class="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-3">
-              EPI manquants selon le preset "{selectedDriver.activite}"
-            </p>
-            <div class="flex flex-wrap gap-2">
-              {#each getMissingEpis(selectedDriver) as kw (kw)}
-                <span
-                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-amber-300 text-xs font-bold text-amber-700"
-                >
-                  <Plus class="w-3 h-3" />{kw}
-                </span>
+            <div class="space-y-2">
+              {#each filteredEpis as epi (epi.id_attribution)}
+                <div in:fly={{ y: 8, duration: 200 }} out:fade={{ duration: 120 }}>
+                  {@render epiCard(epi)}
+                </div>
               {/each}
             </div>
-          </div>
+          {/if}
         </div>
-      {/if}
 
-      <!-- ── Transférer tout le matériel ─────────────────────────── -->
-      {#if selectedDriver.epis.length > 0}
-        <div class="px-5 pb-6">
-          <details class="group">
-            <summary
-              class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 hover:bg-slate-50 hover:border-slate-300 cursor-pointer select-none transition-colors list-none w-full"
-            >
-              <ArrowRightLeft class="w-3.5 h-3.5 shrink-0" />
-              Transférer tout le matériel
-            </summary>
-            <form
-              method="POST"
-              action="?/transferer_tout"
-              use:enhance={async ({ cancel }) => {
-                if (!transferAllTarget) {
-                  cancel();
-                  return;
-                }
-                const dest = data.chauffeurs.find((c) => c.id_chauffeur === transferAllTarget);
-                const ok = await confirmAction({
-                  title: 'Transférer tout le matériel',
-                  message: `Transférer tous les EPI de ${selectedDriver?.nom} ${selectedDriver?.prenom} vers ${dest?.nom} ${dest?.prenom} ?`,
-                  confirmLabel: 'Transférer',
-                  confirmVariant: 'danger',
-                });
-                if (!ok) { cancel(); return; }
-                return ({ update }) => {
-                  transferAllTarget = '';
-                  update();
-                };
-              }}
-              class="flex gap-2 mt-3"
-            >
-              <input type="hidden" name="id_chauffeur_src" value={selectedDriver.id_chauffeur} />
-              <select
-                name="id_chauffeur_dest"
-                bind:value={transferAllTarget}
-                class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-300 bg-white text-slate-600"
-              >
-                <option value="">Choisir un chauffeur…</option>
-                {#each otherDrivers as d (d.id_chauffeur)}
-                  <option value={d.id_chauffeur}>{d.nom} {d.prenom}</option>
+        <!-- ── EPI manquants ─────────────────────────────────────────── -->
+        {#if getMissingEpis(selectedDriver).length > 0}
+          <div class="px-5 pb-5">
+            <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <p class="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-3">
+                EPI manquants selon le preset "{selectedDriver.activite}"
+              </p>
+              <div class="flex flex-wrap gap-2">
+                {#each getMissingEpis(selectedDriver) as kw (kw)}
+                  <span
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-amber-300 text-xs font-bold text-amber-700"
+                  >
+                    <Plus class="w-3 h-3" />{kw}
+                  </span>
                 {/each}
-              </select>
-              <button
-                type="submit"
-                disabled={!transferAllTarget}
-                class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-200 text-slate-600 text-xs font-black hover:bg-slate-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-              >
-                <ArrowRightLeft class="w-3.5 h-3.5" />Transférer tout
-              </button>
-            </form>
-          </details>
-        </div>
-      {/if}
+              </div>
+            </div>
+          </div>
+        {/if}
 
+        <!-- ── Transférer tout le matériel ─────────────────────────── -->
+        {#if selectedDriver.epis.length > 0}
+          <div class="px-5 pb-6">
+            <details class="group">
+              <summary
+                class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 hover:bg-slate-50 hover:border-slate-300 cursor-pointer select-none transition-colors list-none w-full"
+              >
+                <ArrowRightLeft class="w-3.5 h-3.5 shrink-0" />
+                Transférer tout le matériel
+              </summary>
+              <form
+                method="POST"
+                action="?/transferer_tout"
+                use:enhance={async ({ cancel }) => {
+                  if (!transferAllTarget) {
+                    cancel();
+                    return;
+                  }
+                  const dest = data.chauffeurs.find((c) => c.id_chauffeur === transferAllTarget);
+                  const ok = await confirmAction({
+                    title: 'Transférer tout le matériel',
+                    message: `Transférer tous les EPI de ${selectedDriver?.nom} ${selectedDriver?.prenom} vers ${dest?.nom} ${dest?.prenom} ?`,
+                    confirmLabel: 'Transférer',
+                    confirmVariant: 'danger',
+                  });
+                  if (!ok) {
+                    cancel();
+                    return;
+                  }
+                  return ({ update }) => {
+                    transferAllTarget = '';
+                    update();
+                  };
+                }}
+                class="flex gap-2 mt-3"
+              >
+                <input type="hidden" name="id_chauffeur_src" value={selectedDriver.id_chauffeur} />
+                <select
+                  name="id_chauffeur_dest"
+                  bind:value={transferAllTarget}
+                  class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-300 bg-white text-slate-600"
+                >
+                  <option value="">Choisir un chauffeur…</option>
+                  {#each otherDrivers as d (d.id_chauffeur)}
+                    <option value={d.id_chauffeur}>{d.nom} {d.prenom}</option>
+                  {/each}
+                </select>
+                <button
+                  type="submit"
+                  disabled={!transferAllTarget}
+                  class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-200 text-slate-600 text-xs font-black hover:bg-slate-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                >
+                  <ArrowRightLeft class="w-3.5 h-3.5" />Transférer tout
+                </button>
+              </form>
+            </details>
+          </div>
+        {/if}
       {/if}
     </div>
 

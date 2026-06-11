@@ -117,22 +117,34 @@ body {
 
 /* ── View Transitions ─────────────────────────────────────────────── */
 @keyframes vt-fade-in {
-  from { opacity: 0; }
+  from {
+    opacity: 0;
+  }
 }
 @keyframes vt-fade-out {
-  to { opacity: 0; }
+  to {
+    opacity: 0;
+  }
 }
 @keyframes vt-slide-from-right {
-  from { transform: translateX(32px); }
+  from {
+    transform: translateX(32px);
+  }
 }
 @keyframes vt-slide-from-left {
-  from { transform: translateX(-32px); }
+  from {
+    transform: translateX(-32px);
+  }
 }
 @keyframes vt-slide-to-left {
-  to { transform: translateX(-32px); }
+  to {
+    transform: translateX(-32px);
+  }
 }
 @keyframes vt-slide-to-right {
-  to { transform: translateX(32px); }
+  to {
+    transform: translateX(32px);
+  }
 }
 
 /* Forward: ancien sort à gauche, nouveau arrive de droite */

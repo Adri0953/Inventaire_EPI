@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageData } from './$types';
+  import samatBack from '$lib/assets/logo.jpg';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import {
@@ -57,8 +58,10 @@
   );
 </script>
 
+<img src={samatBack} alt="Illustration Dashboard" class="fixed inset-0 w-full h-full object-contain opacity-20 pointer-events-none select-none z-0" />
+
 <div
-  class="w-full max-w-7xl mx-auto p-4 lg:p-10 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700"
+  class="relative z-10 w-full max-w-7xl mx-auto p-4 lg:p-10 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700"
 >
   <!-- ── ALERTES PRIORITAIRES ──────────────── -->
   <section class="space-y-6">
@@ -113,7 +116,9 @@
             <div class="flex flex-col">
               <h3 class="text-2xl font-black text-white tracking-tight">Expirations</h3>
             </div>
-            <div class="bg-white/20 backdrop-blur-md rounded-2xl px-4 py-1.5 border border-white/30">
+            <div
+              class="bg-white/20 backdrop-blur-md rounded-2xl px-4 py-1.5 border border-white/30"
+            >
               <span class="text-xl font-black text-white tabular-nums"
                 >{alerts.expiring.length}</span
               >
@@ -149,21 +154,24 @@
                         EXPIRÉ
                       </div>
                     {:else}
-                      <span class="text-sm font-black {days <= 7 ? 'text-red-500' : 'text-slate-600'}"
+                      <span
+                        class="text-sm font-black {days <= 7 ? 'text-red-500' : 'text-slate-600'}"
                         >J-{days}</span
                       >
                     {/if}
                   </div>
-                  <ChevronRight class="w-5 h-5 text-red-400 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all shrink-0" />
+                  <ChevronRight
+                    class="w-5 h-5 text-red-400 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all shrink-0"
+                  />
                 </div>
               </button>
             {/each}
-            {:else}
-              <div class="h-full flex flex-col items-center justify-center gap-3 opacity-30">
-                <ShieldCheck class="w-12 h-12 text-slate-400" />
-                <p class="text-xs font-black uppercase tracking-widest">Tout est en règle</p>
-              </div>
-            {/if}
+          {:else}
+            <div class="h-full flex flex-col items-center justify-center gap-3 opacity-30">
+              <ShieldCheck class="w-12 h-12 text-slate-400" />
+              <p class="text-xs font-black uppercase tracking-widest">Tout est en règle</p>
+            </div>
+          {/if}
         </div>
       </div>
 
@@ -177,7 +185,9 @@
             <div class="flex flex-col">
               <h3 class="text-2xl font-black text-white tracking-tight">Maintenance</h3>
             </div>
-            <div class="bg-white/20 backdrop-blur-md rounded-2xl px-4 py-1.5 border border-white/30">
+            <div
+              class="bg-white/20 backdrop-blur-md rounded-2xl px-4 py-1.5 border border-white/30"
+            >
               <span class="text-xl font-black text-white tabular-nums"
                 >{alerts.controls.length}</span
               >
@@ -189,7 +199,10 @@
             {#each alerts.controls as ctrl (ctrl.id_controle)}
               {@const days = daysUntil(ctrl.prochain_controle)}
               <button
-                onclick={() => ctrl.epi_id ? goto(resolve('/epi') + '?fiche=' + ctrl.epi_id) : goto(resolve('/epi'))}
+                onclick={() =>
+                  ctrl.epi_id
+                    ? goto(resolve('/epi') + '?fiche=' + ctrl.epi_id)
+                    : goto(resolve('/epi'))}
                 class="w-full flex items-center justify-between p-4 rounded-2xl bg-white border border-orange-50 hover:border-orange-200 hover:bg-orange-50/30 transition-all shadow-sm cursor-pointer group/row text-left"
               >
                 <div class="min-w-0">
@@ -218,7 +231,9 @@
                       <span class="text-sm text-orange-600">J-{days}</span>
                     {/if}
                   </div>
-                  <ChevronRight class="w-5 h-5 text-orange-400 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all shrink-0" />
+                  <ChevronRight
+                    class="w-5 h-5 text-orange-400 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all shrink-0"
+                  />
                 </div>
               </button>
             {/each}
@@ -241,8 +256,12 @@
             <div class="flex flex-col">
               <h3 class="text-2xl font-black text-white tracking-tight">Alertes des stocks</h3>
             </div>
-            <div class="bg-white/20 backdrop-blur-md rounded-2xl px-4 py-1.5 border border-white/30">
-              <span class="text-xl font-black text-white tabular-nums">{alerts.lowStock.length}</span>
+            <div
+              class="bg-white/20 backdrop-blur-md rounded-2xl px-4 py-1.5 border border-white/30"
+            >
+              <span class="text-xl font-black text-white tabular-nums"
+                >{alerts.lowStock.length}</span
+              >
             </div>
           </div>
         </div>
@@ -254,24 +273,31 @@
                 class="bg-white border-b border-slate-100 grid items-center gap-4 px-5 py-2.5"
                 style="grid-template-columns: 72px 1fr 110px 90px 120px"
               >
-                <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap">Niveau</p>
+                <p
+                  class="text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
+                >
+                  Niveau
+                </p>
                 <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">
                   Désignation
                 </p>
                 <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">
                   Catégorie
                 </p>
-                <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap" style="grid-column: span 2; padding-left: 45px">
+                <p
+                  class="text-[9px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap"
+                  style="grid-column: span 2; padding-left: 45px"
+                >
                   Stocks restants
                 </p>
               </div>
               {#each alerts.lowStock as epi (epi.id_modele_epi)}
                 {@const pct =
                   epi.seuil_alerte > 0
-                    ? Math.min(Math.round((epi.stock_total / epi.seuil_alerte) * 100), 100)
+                    ? Math.min(Math.round((epi.disponibles / epi.seuil_alerte) * 100), 100)
                     : 0}
                 {@const severity =
-                  epi.stock_total === 0 ? 'rupture' : pct <= 40 ? 'critique' : 'bas'}
+                  epi.disponibles === 0 ? 'rupture' : pct <= 40 ? 'critique' : 'bas'}
                 <button
                   onclick={() => goto(resolve('/epi'))}
                   class="w-full grid items-center gap-4 px-5 py-3.5 border-b border-slate-50 hover:bg-amber-50/40 transition-colors cursor-pointer group/row text-left"
@@ -309,7 +335,7 @@
                         ? 'text-red-500'
                         : 'text-amber-600'}"
                   >
-                    {epi.stock_total} / {epi.seuil_alerte}
+                    {epi.disponibles} / {epi.stock_total}
                   </p>
                   <div
                     class="h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200"
@@ -320,7 +346,9 @@
                       style="width: {pct}%"
                     ></div>
                   </div>
-                  <ChevronRight class="w-5 h-5 text-amber-500 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all justify-self-center" />
+                  <ChevronRight
+                    class="w-5 h-5 text-amber-500 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all justify-self-center"
+                  />
                 </button>
               {/each}
             {:else}
@@ -334,9 +362,9 @@
           <!-- Donut — répartition par sévérité -->
           {#if alerts.lowStock.length > 0}
             {@const total = alerts.lowStock.length}
-            {@const nbRuptures = alerts.lowStock.filter((e) => e.stock_total === 0).length}
+            {@const nbRuptures = alerts.lowStock.filter((e) => e.disponibles === 0).length}
             {@const nbCritiques = alerts.lowStock.filter(
-              (e) => e.stock_total > 0 && e.stock_total / e.seuil_alerte <= 0.4,
+              (e) => e.disponibles > 0 && e.disponibles / e.seuil_alerte <= 0.4,
             ).length}
             {@const nbBas = total - nbRuptures - nbCritiques}
             {@const C = 2 * Math.PI * 40}
@@ -505,11 +533,7 @@
     >
       <Users class="absolute -right-3 -top-3 w-24 h-24 text-white/5" />
       <div class="relative z-10">
-        <p
-          class="font-black uppercase tracking-widest text-[10px] text-sky-100"
-        >
-          Chauffeurs
-        </p>
+        <p class="font-black uppercase tracking-widest text-[10px] text-sky-100">Chauffeurs</p>
         <div class="flex items-end gap-1 mt-1">
           <span class="text-5xl font-black text-white tabular-nums leading-none tracking-tighter"
             >{stats.driversWithoutEquipment}</span
@@ -572,7 +596,9 @@
               <span class="text-xs font-bold text-emerald-400 tabular-nums whitespace-nowrap"
                 >{relativeDate(item.date_attribution)}</span
               >
-              <ChevronRight class="w-5 h-5 text-emerald-500 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all" />
+              <ChevronRight
+                class="w-5 h-5 text-emerald-500 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all"
+              />
             </div>
           </button>
         {/each}
@@ -600,7 +626,9 @@
             class="px-8 py-5 flex items-center gap-4 hover:bg-yellow-50/50 transition-colors group/row"
           >
             <div
-              class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 {variation > 0 ? 'bg-yellow-100 text-yellow-500' : 'bg-amber-200 text-amber-600'}"
+              class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 {variation > 0
+                ? 'bg-yellow-100 text-yellow-500'
+                : 'bg-amber-200 text-amber-600'}"
             >
               {#if variation > 0}
                 <TrendingUp class="w-5 h-5" />
@@ -612,9 +640,7 @@
               <p class="text-sm font-bold text-slate-900 truncate">{item.epi_nom}</p>
               <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter mt-0.5">
                 {item.motif || 'Mouvement de stock'} ·
-                <span class="text-yellow-500"
-                  >{relativeDate(item.date_modification)}</span
-                >
+                <span class="text-yellow-500">{relativeDate(item.date_modification)}</span>
               </p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
@@ -623,7 +649,9 @@
               >
                 {variation > 0 ? '+' : ''}{variation}
               </span>
-              <ChevronRight class="w-5 h-5 text-yellow-500 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all" />
+              <ChevronRight
+                class="w-5 h-5 text-yellow-500 opacity-0 group-hover/row:opacity-100 translate-x-0 group-hover/row:translate-x-1 transition-all"
+              />
             </div>
           </a>
         {/each}

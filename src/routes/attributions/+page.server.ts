@@ -53,7 +53,7 @@ export const load: PageServerLoad = async () => {
   const attribueByModele: Record<string, number> = {};
   for (const a of attrsRaw ?? []) {
     if (a.date_retour) continue;
-    const modeleId = (first(a.epi)?.id_modele_epi) as string | undefined;
+    const modeleId = first(a.epi)?.id_modele_epi as string | undefined;
     if (modeleId) attribueByModele[modeleId] = (attribueByModele[modeleId] ?? 0) + 1;
   }
 

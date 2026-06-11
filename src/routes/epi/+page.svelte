@@ -91,7 +91,7 @@
   });
 
   type SortCol = 'designation' | 'type' | 'statut' | 'chauffeur' | 'expiration';
-  let sortCol = $state<SortCol>('designation');
+  let sortCol = $state<SortCol>('expiration');
   let sortDir = $state<'asc' | 'desc'>('asc');
 
   function toggleSort(col: SortCol) {

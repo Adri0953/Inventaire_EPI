@@ -10,7 +10,7 @@ export const load: PageServerLoad = async () => {
       .from('historique_stock')
       .select('*, modele_epi(designation)')
       .order('date_modification', { ascending: false })
-      .limit(20),
+      .limit(500),
     supabase
       .from('controle')
       .select('id_epi, prochain_controle')
@@ -166,6 +166,46 @@ export const actions: Actions = {
         motif: 'Modification manuelle',
       });
     }
+
+    return { success: true };
+  },
+
+  // Ajuste le stock_total d'un modèle par un delta (positif ou négatif) et trace l'historique.
+  ajusterStock: async ({ request }) => {
+    const fd = await request.formData();
+    const id_modele_epi = fd.get('id') as string;
+    const delta = parseInt(fd.get('delta') as string);
+    const motif = (fd.get('motif') as string)?.trim() || null;
+
+    if (!id_modele_epi || isNaN(delta)) return fail(400, { error: 'Paramètres invalides.' });
+    if (delta === 0) return fail(400, { error: 'Le delta ne peut pas être zéro.' });
+
+    const { data: modele } = await supabase
+      .from('modele_epi')
+      .select('stock_total')
+      .eq('id_modele_epi', id_modele_epi)
+      .single();
+
+    if (!modele) return fail(400, { error: 'Modèle introuvable.' });
+
+    const ancienne = modele.stock_total;
+    const nouvelle = ancienne + delta;
+
+    if (nouvelle < 0) return fail(400, { error: 'Le stock ne peut pas être négatif.' });
+
+    const { error } = await supabase
+      .from('modele_epi')
+      .update({ stock_total: nouvelle })
+      .eq('id_modele_epi', id_modele_epi);
+    if (error) return fail(500, { error: 'Erreur lors de la mise à jour du stock.' });
+
+    await supabase.from('historique_stock').insert({
+      id_modele_epi,
+      date_modification: new Date().toISOString(),
+      ancienne_valeur: ancienne,
+      nouvelle_valeur: nouvelle,
+      motif: motif || (delta > 0 ? 'Approvisionnement' : 'Retrait de stock'),
+    });
 
     return { success: true };
   },

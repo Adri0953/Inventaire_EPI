@@ -88,17 +88,16 @@
     rows.sort((a, b) => {
       let cmp = 0;
       if (sortCol === 'chauffeur')
-        cmp = `${a.chauffeur_nom} ${a.chauffeur_prenom}`.localeCompare(`${b.chauffeur_nom} ${b.chauffeur_prenom}`, 'fr');
-      else if (sortCol === 'epi')
-        cmp = a.designation.localeCompare(b.designation, 'fr');
-      else if (sortCol === 'taille')
-        cmp = (a.taille ?? '').localeCompare(b.taille ?? '', 'fr');
+        cmp = `${a.chauffeur_nom} ${a.chauffeur_prenom}`.localeCompare(
+          `${b.chauffeur_nom} ${b.chauffeur_prenom}`,
+          'fr',
+        );
+      else if (sortCol === 'epi') cmp = a.designation.localeCompare(b.designation, 'fr');
+      else if (sortCol === 'taille') cmp = (a.taille ?? '').localeCompare(b.taille ?? '', 'fr');
       else if (sortCol === 'attribution')
         cmp = (a.date_attribution ?? '').localeCompare(b.date_attribution ?? '');
-      else if (sortCol === 'retour')
-        cmp = (a.date_retour ?? '').localeCompare(b.date_retour ?? '');
-      else if (sortCol === 'statut')
-        cmp = (a.date_retour ? 1 : 0) - (b.date_retour ? 1 : 0);
+      else if (sortCol === 'retour') cmp = (a.date_retour ?? '').localeCompare(b.date_retour ?? '');
+      else if (sortCol === 'statut') cmp = (a.date_retour ? 1 : 0) - (b.date_retour ? 1 : 0);
       return sortDir === 'asc' ? cmp : -cmp;
     });
 
@@ -179,7 +178,9 @@
   let createChauffeurId = $state('');
   let createChauffeurSearch = $state('');
   let showChauffeurDropdown = $state(false);
-  let createEpiLines = $state<{ id: string; search: string; open: boolean }[]>([{ id: '', search: '', open: false }]);
+  let createEpiLines = $state<{ id: string; search: string; open: boolean }[]>([
+    { id: '', search: '', open: false },
+  ]);
 
   const filteredCreateChauffeurs = $derived(
     createChauffeurSearch.trim()
@@ -218,7 +219,11 @@
   let handledFiche = $state<string | null>(null);
   $effect(() => {
     const fiche = $page.url.searchParams.get('fiche');
-    if (fiche && fiche !== handledFiche && data.attributions.some((a) => a.id_attribution === fiche)) {
+    if (
+      fiche &&
+      fiche !== handledFiche &&
+      data.attributions.some((a) => a.id_attribution === fiche)
+    ) {
       handledFiche = fiche;
       openAttr(fiche);
     }
@@ -266,10 +271,7 @@
     createEpiLines[i].open = false;
   }
 
-  const createIsValid = $derived(
-    !!createChauffeurId && createEpiLines.some((l) => l.id),
-  );
-
+  const createIsValid = $derived(!!createChauffeurId && createEpiLines.some((l) => l.id));
 
   // ── Navigation vers les fiches dédiées ────────────────────────────────
   function voirChauffeur(id: string) {
@@ -289,7 +291,10 @@
 
   function toggleSort(col: SortCol) {
     if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-    else { sortCol = col; sortDir = 'asc'; }
+    else {
+      sortCol = col;
+      sortDir = 'asc';
+    }
   }
 </script>
 
@@ -331,7 +336,9 @@
     <button
       onclick={() => toggleStatut('active')}
       class="relative flex items-center gap-4 overflow-hidden rounded-3xl border-2 px-5 py-4 text-left shadow-xl transition-all
-        {filterStatut === 'active' ? 'border-emerald-600 ring-2 ring-emerald-400' : 'border-emerald-500'}"
+        {filterStatut === 'active'
+        ? 'border-emerald-600 ring-2 ring-emerald-400'
+        : 'border-emerald-500'}"
       style="background: linear-gradient(90deg, #059669 0%, #10b981 100%)"
     >
       <UserCheck class="absolute -right-3 -bottom-3 h-20 w-20 text-white/10" />
@@ -359,7 +366,9 @@
     <button
       onclick={() => toggleStatut('month')}
       class="relative flex items-center gap-4 overflow-hidden rounded-3xl border-2 px-5 py-4 text-left shadow-xl transition-all
-        {filterStatut === 'month' ? 'border-emerald-300 ring-2 ring-emerald-200' : 'border-emerald-200'}"
+        {filterStatut === 'month'
+        ? 'border-emerald-300 ring-2 ring-emerald-200'
+        : 'border-emerald-200'}"
       style="background: linear-gradient(90deg, #a7f3d0 0%, #d1fae5 100%)"
     >
       <Clock class="absolute -right-3 -bottom-3 h-20 w-20 text-emerald-400/30" />
@@ -427,7 +436,9 @@
         >
           {label}
           {#if sortCol === col}
-            {#if sortDir === 'asc'}<ChevronUp class="h-3 w-3" />{:else}<ChevronDown class="h-3 w-3" />{/if}
+            {#if sortDir === 'asc'}<ChevronUp class="h-3 w-3" />{:else}<ChevronDown
+                class="h-3 w-3"
+              />{/if}
           {:else}
             <ChevronsUpDown class="h-3 w-3 opacity-40" />
           {/if}
@@ -440,7 +451,9 @@
       {@render sortBtn('attribution', 'Attribution')}
       {@render sortBtn('retour', 'Retour')}
       {@render sortBtn('statut', 'Statut', true)}
-      <p class="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Suppr.</p>
+      <p class="text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">
+        Suppr.
+      </p>
     </div>
 
     {#if filtered.length === 0}
@@ -542,7 +555,10 @@
                 confirmLabel: 'Supprimer',
                 confirmVariant: 'danger',
               });
-              if (!ok) { cancel(); return; }
+              if (!ok) {
+                cancel();
+                return;
+              }
               return ({ update }) => update();
             }}
           >
@@ -655,7 +671,8 @@
       <div class="overflow-hidden rounded-xl border-2 border-violet-200 bg-white">
         <div class="flex items-center gap-2 border-b border-violet-100 px-4 py-3">
           <Package class="h-3.5 w-3.5 text-violet-500" />
-          <span class="text-[11px] font-semibold tracking-widest text-violet-600 uppercase">EPI</span
+          <span class="text-[11px] font-semibold tracking-widest text-violet-600 uppercase"
+            >EPI</span
           >
         </div>
         <div class="p-4">
@@ -712,7 +729,11 @@
       </div>
 
       <!-- Section Modification (accordéon) -->
-      <div class="overflow-hidden rounded-xl border-2 {showEditForm ? 'border-emerald-300' : 'border-slate-100'} bg-white transition-colors">
+      <div
+        class="overflow-hidden rounded-xl border-2 {showEditForm
+          ? 'border-emerald-300'
+          : 'border-slate-100'} bg-white transition-colors"
+      >
         <button
           type="button"
           onclick={() => (showEditForm = !showEditForm)}
@@ -721,16 +742,21 @@
         >
           <div class="flex items-center gap-2">
             <Save class="h-3.5 w-3.5 {showEditForm ? 'text-emerald-500' : 'text-slate-400'}" />
-            <span class="text-[11px] font-semibold tracking-widest uppercase
-              {showEditForm ? 'text-emerald-600' : 'text-slate-400'}"
-              >Corriger l'attribution</span
+            <span
+              class="text-[11px] font-semibold tracking-widest uppercase
+              {showEditForm ? 'text-emerald-600' : 'text-slate-400'}">Corriger l'attribution</span
             >
           </div>
           <svg
-            class="h-4 w-4 transition-transform {showEditForm ? 'rotate-180 text-emerald-500' : 'text-slate-300'}"
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+            class="h-4 w-4 transition-transform {showEditForm
+              ? 'rotate-180 text-emerald-500'
+              : 'text-slate-300'}"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
           >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
           </svg>
         </button>
 
@@ -763,33 +789,54 @@
               </select>
             </div>
             <div class="space-y-1.5">
-              <label for="edit-epi-search" class="text-[10px] font-black tracking-widest text-slate-400 uppercase">EPI</label>
+              <label
+                for="edit-epi-search"
+                class="text-[10px] font-black tracking-widest text-slate-400 uppercase">EPI</label
+              >
               <input type="hidden" name="id_modele_epi" value={editModeleId} />
               <div class="relative">
-                <Search class="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                <Search
+                  class="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
+                />
                 <input
                   id="edit-epi-search"
                   type="text"
                   bind:value={editEpiSearch}
                   onfocus={() => (showEditEpiDropdown = true)}
-                  oninput={() => { showEditEpiDropdown = true; editModeleId = ''; }}
+                  oninput={() => {
+                    showEditEpiDropdown = true;
+                    editModeleId = '';
+                  }}
                   onblur={() => setTimeout(() => (showEditEpiDropdown = false), 150)}
                   autocomplete="off"
                   class="w-full rounded-xl border py-2 pr-3 pl-8 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-400/30
-                    {editModeleId ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-white'}"
+                    {editModeleId
+                    ? 'border-emerald-300 bg-emerald-50'
+                    : 'border-slate-200 bg-white'}"
                 />
                 {#if showEditEpiDropdown}
                   {#if filteredEditEpi.length > 0}
-                    <ul class="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                    <ul
+                      class="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg"
+                    >
                       {#each filteredEditEpi as e (e.id_modele_epi)}
                         <li>
                           <button
                             type="button"
-                            onmousedown={() => { editModeleId = e.id_modele_epi; editEpiSearch = epiLabel(e); showEditEpiDropdown = false; }}
-                            disabled={e.stock_dispo <= 0 && e.id_modele_epi !== selectedAttr?.id_modele_epi}
+                            onmousedown={() => {
+                              editModeleId = e.id_modele_epi;
+                              editEpiSearch = epiLabel(e);
+                              showEditEpiDropdown = false;
+                            }}
+                            disabled={e.stock_dispo <= 0 &&
+                              e.id_modele_epi !== selectedAttr?.id_modele_epi}
                             class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors
-                              {e.stock_dispo <= 0 && e.id_modele_epi !== selectedAttr?.id_modele_epi ? 'cursor-not-allowed opacity-40' : 'hover:bg-emerald-50'}
-                              {editModeleId === e.id_modele_epi ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700'}"
+                              {e.stock_dispo <= 0 && e.id_modele_epi !== selectedAttr?.id_modele_epi
+                              ? 'cursor-not-allowed opacity-40'
+                              : 'hover:bg-emerald-50'}
+                              {editModeleId === e.id_modele_epi
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'text-slate-700'}"
                           >
                             <span class="min-w-0 flex-1 text-xs leading-tight">
                               <span class="font-semibold">{e.designation}</span>
@@ -797,16 +844,23 @@
                               <span class="text-slate-400"> — {e.type}</span>
                             </span>
                             {#if e.stock_dispo <= 0}
-                              <span class="shrink-0 rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-black text-red-500">ÉPUISÉ</span>
+                              <span
+                                class="shrink-0 rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-black text-red-500"
+                                >ÉPUISÉ</span
+                              >
                             {:else}
-                              <span class="shrink-0 text-[10px] font-semibold text-emerald-600">{e.stock_dispo} dispo</span>
+                              <span class="shrink-0 text-[10px] font-semibold text-emerald-600"
+                                >{e.stock_dispo} dispo</span
+                              >
                             {/if}
                           </button>
                         </li>
                       {/each}
                     </ul>
                   {:else}
-                    <div class="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-400 shadow-lg">
+                    <div
+                      class="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-400 shadow-lg"
+                    >
                       Aucun EPI trouvé
                     </div>
                   {/if}
@@ -839,7 +893,10 @@
               confirmLabel: 'Retourner',
               confirmVariant: 'success',
             });
-            if (!ok) { cancel(); return; }
+            if (!ok) {
+              cancel();
+              return;
+            }
             return ({ update }) => update();
           }}
         >
@@ -962,12 +1019,17 @@
               type="text"
               bind:value={createChauffeurSearch}
               onfocus={() => (showChauffeurDropdown = true)}
-              oninput={() => { showChauffeurDropdown = true; createChauffeurId = ''; }}
+              oninput={() => {
+                showChauffeurDropdown = true;
+                createChauffeurId = '';
+              }}
               onblur={() => setTimeout(() => (showChauffeurDropdown = false), 150)}
               placeholder="Rechercher un chauffeur…"
               autocomplete="off"
               class="w-full rounded-xl border py-3 pr-4 pl-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-400/30
-                {createChauffeurId ? 'border-emerald-300 bg-emerald-50 focus:border-emerald-500' : 'border-slate-200 bg-slate-50 focus:border-emerald-500 focus:bg-white'}"
+                {createChauffeurId
+                ? 'border-emerald-300 bg-emerald-50 focus:border-emerald-500'
+                : 'border-slate-200 bg-slate-50 focus:border-emerald-500 focus:bg-white'}"
             />
             {#if showChauffeurDropdown && filteredCreateChauffeurs.length > 0}
               <ul
@@ -979,14 +1041,17 @@
                       type="button"
                       onmousedown={() => selectChauffeur(c.id_chauffeur, c.prenom, c.nom)}
                       class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium transition-colors hover:bg-emerald-50
-                        {c.id_chauffeur === createChauffeurId ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700'}"
+                        {c.id_chauffeur === createChauffeurId
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'text-slate-700'}"
                     >
                       <span
                         class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-[11px] font-black text-emerald-700"
                       >
                         {initials(c.prenom, c.nom)}
                       </span>
-                      {c.nom} {c.prenom}
+                      {c.nom}
+                      {c.prenom}
                     </button>
                   </li>
                 {/each}
@@ -1001,9 +1066,7 @@
             {/if}
           </div>
           {#if selectedChauffeurLabel}
-            <p class="text-[11px] font-semibold text-emerald-600">
-              ✓ Chauffeur sélectionné
-            </p>
+            <p class="text-[11px] font-semibold text-emerald-600">✓ Chauffeur sélectionné</p>
           {/if}
         </div>
 
@@ -1016,22 +1079,34 @@
             <div class="flex items-center gap-2">
               <input type="hidden" name="id_modele_epi" value={line.id} />
               <div class="relative min-w-0 flex-1">
-                <Search class="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search
+                  class="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400"
+                />
                 <input
                   type="text"
                   bind:value={line.search}
                   onfocus={() => (createEpiLines[i].open = true)}
-                  oninput={() => { createEpiLines[i].open = true; createEpiLines[i].id = ''; }}
-                  onblur={() => setTimeout(() => { createEpiLines[i].open = false; }, 150)}
+                  oninput={() => {
+                    createEpiLines[i].open = true;
+                    createEpiLines[i].id = '';
+                  }}
+                  onblur={() =>
+                    setTimeout(() => {
+                      createEpiLines[i].open = false;
+                    }, 150)}
                   placeholder="Rechercher un EPI…"
                   autocomplete="off"
                   class="w-full rounded-xl border py-3 pr-4 pl-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-400/30
-                    {line.id ? 'border-emerald-300 bg-emerald-50 focus:border-emerald-500' : 'border-slate-200 bg-slate-50 focus:border-emerald-500 focus:bg-white'}"
+                    {line.id
+                    ? 'border-emerald-300 bg-emerald-50 focus:border-emerald-500'
+                    : 'border-slate-200 bg-slate-50 focus:border-emerald-500 focus:bg-white'}"
                 />
                 {#if line.open}
                   {@const results = filteredEpi(i, line.search)}
                   {#if results.length > 0}
-                    <ul class="absolute z-10 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                    <ul
+                      class="absolute z-10 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg"
+                    >
                       {#each results as e (e.id_modele_epi)}
                         <li>
                           <button
@@ -1039,8 +1114,12 @@
                             onmousedown={() => selectEpi(i, e.id_modele_epi, epiLabel(e))}
                             disabled={e.stock_dispo <= 0}
                             class="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors
-                              {e.stock_dispo <= 0 ? 'cursor-not-allowed opacity-40' : 'hover:bg-emerald-50'}
-                              {line.id === e.id_modele_epi ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700'}"
+                              {e.stock_dispo <= 0
+                              ? 'cursor-not-allowed opacity-40'
+                              : 'hover:bg-emerald-50'}
+                              {line.id === e.id_modele_epi
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'text-slate-700'}"
                           >
                             <span class="min-w-0 flex-1 leading-tight">
                               <span class="font-semibold">{e.designation}</span>
@@ -1048,16 +1127,23 @@
                               <span class="text-slate-400"> — {e.type}</span>
                             </span>
                             {#if e.stock_dispo <= 0}
-                              <span class="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-black text-red-500">ÉPUISÉ</span>
+                              <span
+                                class="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-black text-red-500"
+                                >ÉPUISÉ</span
+                              >
                             {:else}
-                              <span class="shrink-0 text-[11px] font-semibold text-emerald-600">{e.stock_dispo} dispo</span>
+                              <span class="shrink-0 text-[11px] font-semibold text-emerald-600"
+                                >{e.stock_dispo} dispo</span
+                              >
                             {/if}
                           </button>
                         </li>
                       {/each}
                     </ul>
                   {:else}
-                    <div class="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-400 shadow-lg">
+                    <div
+                      class="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-400 shadow-lg"
+                    >
                       Aucun EPI trouvé
                     </div>
                   {/if}

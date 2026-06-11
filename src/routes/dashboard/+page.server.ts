@@ -44,8 +44,8 @@ export const load: PageServerLoad = async () => {
       .lte('prochain_controle', toDateStr(sevenDaysFromNow))
       .order('prochain_controle', { ascending: true }),
 
-    // 4. Tous les EPI pour les stats par statut
-    supabase.from('epi').select('statut'),
+    // 4. Tous les EPI pour les stats par statut + indisponibles par modèle
+    supabase.from('epi').select('id_modele_epi, statut, date_expiration'),
 
     // 5. Nombre total de chauffeurs
     supabase.from('chauffeur').select('id_chauffeur', { count: 'exact', head: true }),
@@ -72,6 +72,17 @@ export const load: PageServerLoad = async () => {
     // 8. Chauffeurs ayant au moins une attribution active (date_retour IS NULL)
     supabase.from('attribution').select('id_chauffeur').is('date_retour', null),
   ]);
+
+  const today = new Date().toISOString().split('T')[0];
+  const indisponiblesParModele: Record<string, number> = {};
+  for (const e of epiStats || []) {
+    const estAttribue = e.statut === 'attribué';
+    const estHorsService = e.statut === 'hors_service';
+    const estExpire = e.date_expiration != null && e.date_expiration < today;
+    if (estAttribue || estHorsService || estExpire) {
+      indisponiblesParModele[e.id_modele_epi] = (indisponiblesParModele[e.id_modele_epi] ?? 0) + 1;
+    }
+  }
 
   const totalStock = (allModeles || []).reduce((sum, m) => sum + (m.stock_total ?? 0), 0);
   const attribues = (activeAttributions || []).length;
@@ -139,11 +150,19 @@ export const load: PageServerLoad = async () => {
         };
       }),
       lowStock: (allModeles || [])
-        .filter((e) => e.seuil_alerte > 0 && e.stock_total / e.seuil_alerte <= 0.5)
+        .map((m) => ({
+          ...m,
+          disponibles: Math.max(0, m.stock_total - (indisponiblesParModele[m.id_modele_epi] ?? 0)),
+        }))
+        .filter((m) => {
+          if (m.seuil_alerte === 0) return false;
+          if (m.disponibles === 0) return true;
+          return m.disponibles / m.seuil_alerte <= 0.5;
+        })
         .sort((a, b) => {
           const rank = (e: typeof a) => {
-            if (e.stock_total === 0) return 0;
-            return e.stock_total / e.seuil_alerte <= 0.4 ? 1 : 2;
+            if (e.disponibles === 0) return 0;
+            return e.disponibles / e.seuil_alerte <= 0.4 ? 1 : 2;
           };
           return rank(a) - rank(b);
         }),
