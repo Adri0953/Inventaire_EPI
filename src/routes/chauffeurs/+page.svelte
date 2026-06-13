@@ -592,9 +592,9 @@
     <div class="p-6 bg-linear-to-br from-blue-600 to-blue-400 relative overflow-hidden shrink-0">
       <UserPlus class="absolute -right-4 -bottom-4 w-32 h-32 text-white/5" />
       <div class="relative z-10 flex items-start justify-between gap-4">
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3.5">
           <div
-            class="w-12 h-12 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center font-black text-white text-xl"
+            class="w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center font-bold text-white text-base shrink-0"
           >
             {#if createPrenom || createNom}
               {(createPrenom[0] ?? '').toUpperCase()}{(createNom[0] ?? '').toUpperCase()}
@@ -602,22 +602,22 @@
               ?
             {/if}
           </div>
-          <div>
-            <h2 class="text-xl font-black text-white tracking-tight">
+          <div class="min-w-0">
+            <h2 class="text-lg font-bold text-white leading-tight truncate">
               {createPrenom || createNom
                 ? `${createPrenom} ${createNom}`.trim()
                 : 'Nouveau chauffeur'}
             </h2>
-            <p class="text-blue-200 text-xs font-bold mt-0.5">
+            <p class="text-blue-200 text-xs mt-0.5">
               {createActivite || 'Activité non renseignée'}
             </p>
           </div>
         </div>
         <button
           onclick={() => (showCreatePanel = false)}
-          class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors shrink-0"
+          class="shrink-0 p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors"
         >
-          <X class="w-5 h-5" />
+          <X class="w-4 h-4" />
         </button>
       </div>
     </div>
@@ -788,48 +788,48 @@
     <!-- En-tête du panel -->
     <div class="p-6 bg-linear-to-br from-blue-600 to-blue-400 relative overflow-hidden shrink-0">
       <Users class="absolute -right-4 -bottom-4 w-32 h-32 text-white/5" />
-      <div class="relative z-10 flex items-start justify-between gap-4">
-        <div class="flex items-center gap-4">
+      <div class="relative z-10 flex items-start justify-between gap-4 mb-4">
+        <div class="flex items-center gap-3.5">
           <div
-            class="w-12 h-12 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center font-black text-white text-xl"
+            class="w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center font-bold text-white text-base shrink-0"
           >
             {selectedDriver.nom[0]?.toUpperCase()}
           </div>
-          <div>
-            <h2 class="text-xl font-black text-white tracking-tight">
+          <div class="min-w-0">
+            <h2 class="text-lg font-bold text-white leading-tight truncate">
               {selectedDriver.nom}
               {selectedDriver.prenom}
             </h2>
-            <p class="text-blue-200 text-xs font-bold mt-0.5">
+            <p class="text-blue-200 text-xs mt-0.5">
               {selectedDriver.activite ?? 'Activité non renseignée'}
             </p>
           </div>
         </div>
         <button
           onclick={() => (selectedDriverId = null)}
-          class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors shrink-0"
+          class="shrink-0 p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors"
         >
-          <X class="w-5 h-5" />
+          <X class="w-4 h-4" />
         </button>
       </div>
 
-      <!-- Statut + badge expiration -->
-      <div class="relative z-10 flex items-center gap-2 mt-4 flex-wrap">
+      <!-- Statut équipement -->
+      <div class="relative z-10 flex items-center gap-2 flex-wrap">
         {#if getEquipmentStatus(selectedDriver) === 'complet'}
           <span
-            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-[11px] font-black text-emerald-200 uppercase"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-[11px] font-semibold text-emerald-200 uppercase"
           >
             <ShieldCheck class="w-3.5 h-3.5" />Équipement complet
           </span>
         {:else if getEquipmentStatus(selectedDriver) === 'incomplet'}
           <span
-            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-[11px] font-black text-amber-200 uppercase"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-400/30 text-[11px] font-semibold text-amber-200 uppercase"
           >
             <ShieldAlert class="w-3.5 h-3.5" />Équipement incomplet
           </span>
         {:else}
           <span
-            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/20 border border-red-400/30 text-[11px] font-black text-red-200 uppercase"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/20 border border-red-400/30 text-[11px] font-semibold text-red-200 uppercase"
           >
             <ShieldX class="w-3.5 h-3.5" />Non équipé
           </span>

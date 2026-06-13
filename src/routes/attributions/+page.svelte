@@ -596,25 +596,30 @@
       class="relative shrink-0 overflow-hidden bg-linear-to-br from-emerald-900 to-emerald-700 p-6"
     >
       <ArrowRightLeft class="absolute -right-4 -bottom-4 h-32 w-32 text-white/5" />
-      <div class="relative z-10 flex items-start justify-between gap-4">
-        <div>
-          <p class="text-xs tracking-wider text-emerald-300 uppercase">Attribution</p>
-          <h2 class="mt-0.5 text-lg font-bold text-white">
-            {selectedAttr.designation}
-          </h2>
-          <p class="mt-1 text-xs text-emerald-200">
-            {selectedAttr.chauffeur_nom}
-            {selectedAttr.chauffeur_prenom}
-          </p>
+      <div class="relative z-10 flex items-start justify-between gap-4 mb-4">
+        <div class="flex items-center gap-3.5">
+          <div
+            class="w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0"
+          >
+            <ArrowRightLeft class="h-5 w-5 text-white" />
+          </div>
+          <div class="min-w-0">
+            <h2 class="text-lg font-bold text-white leading-tight truncate">
+              {selectedAttr.designation}
+            </h2>
+            <p class="text-emerald-300 text-xs mt-0.5">
+              {selectedAttr.type}{selectedAttr.taille ? ` · ${selectedAttr.taille}` : ''}
+            </p>
+          </div>
         </div>
         <button
           onclick={() => (selectedAttrId = null)}
-          class="shrink-0 rounded-lg p-1.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+          class="shrink-0 p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors"
         >
-          <X class="h-5 w-5" />
+          <X class="h-4 w-4" />
         </button>
       </div>
-      <div class="relative z-10 mt-4">
+      <div class="relative z-10 flex items-center gap-2 flex-wrap">
         {#if active}
           <span
             class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/30 bg-emerald-500/20 px-2.5 py-1 text-[11px] font-semibold text-emerald-100"
@@ -972,15 +977,22 @@
     >
       <Plus class="absolute -right-4 -bottom-4 h-32 w-32 text-white/5" />
       <div class="relative z-10 flex items-start justify-between gap-4">
-        <div>
-          <h2 class="text-lg font-bold text-white">Nouvelle attribution</h2>
-          <p class="mt-0.5 text-xs text-emerald-200">Attribuer un EPI disponible à un chauffeur</p>
+        <div class="flex items-center gap-3.5">
+          <div
+            class="w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0"
+          >
+            <Plus class="h-5 w-5 text-white" />
+          </div>
+          <div class="min-w-0">
+            <h2 class="text-lg font-bold text-white leading-tight">Nouvelle attribution</h2>
+            <p class="text-emerald-300 text-xs mt-0.5">Attribuer un EPI disponible à un chauffeur</p>
+          </div>
         </div>
         <button
           onclick={() => (showCreate = false)}
-          class="shrink-0 rounded-lg p-1.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+          class="shrink-0 p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors"
         >
-          <X class="h-5 w-5" />
+          <X class="h-4 w-4" />
         </button>
       </div>
     </div>
