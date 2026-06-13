@@ -275,11 +275,9 @@
 
   // ── Navigation vers les fiches dédiées ────────────────────────────────
   function voirChauffeur(id: string) {
-    // eslint-disable-next-line svelte/no-navigation-without-resolve
     goto(`${resolve('/chauffeurs')}?fiche=${id}`);
   }
   function voirEpi(id: string) {
-    // eslint-disable-next-line svelte/no-navigation-without-resolve
     goto(`${resolve('/epi')}?fiche=${id}`);
   }
 

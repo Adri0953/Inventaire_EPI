@@ -58,7 +58,11 @@
   );
 </script>
 
-<img src={samatBack} alt="Illustration Dashboard" class="fixed inset-0 w-full h-full object-contain opacity-20 pointer-events-none select-none z-0" />
+<img
+  src={samatBack}
+  alt="Illustration Dashboard"
+  class="fixed inset-0 w-full h-full object-contain opacity-20 pointer-events-none select-none z-0"
+/>
 
 <div
   class="relative z-10 w-full max-w-7xl mx-auto p-4 lg:p-10 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700"

@@ -29,15 +29,6 @@
 
   type Modele = (typeof data.modeles)[0];
 
-  const formatDate = (d: string | null) =>
-    d
-      ? new Date(d).toLocaleDateString('fr-FR', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        })
-      : '—';
-
   // ── État ───────────────────────────────────────────────────────────────
   let panneauOuvert = $state(false);
   let modeleEnEdition = $state<Modele | null>(null);
@@ -252,20 +243,18 @@
       liste = liste.filter((h) => h.date_modification <= historiqueDateFin + 'T23:59:59');
 
     return liste.sort((a, b) => {
-      const cmp =
-        new Date(a.date_modification).getTime() - new Date(b.date_modification).getTime();
+      const cmp = new Date(a.date_modification).getTime() - new Date(b.date_modification).getTime();
       return triHistorique === 'recent' ? -cmp : cmp;
     });
   });
 
   const historiqueGroupes = $derived.by(() => {
-    const groupMap = new Map<string, typeof historiquesFiltres>();
+    const groups: Record<string, typeof historiquesFiltres> = {};
     for (const h of historiquesFiltres) {
       const dateKey = h.date_modification.slice(0, 10);
-      if (!groupMap.has(dateKey)) groupMap.set(dateKey, []);
-      groupMap.get(dateKey)!.push(h);
+      (groups[dateKey] ??= []).push(h);
     }
-    return [...groupMap.entries()].map(([date, items]) => ({
+    return Object.entries(groups).map(([date, items]) => ({
       date,
       items,
       net: items.reduce((s, h) => s + (h.nouvelle_valeur - h.ancienne_valeur), 0),
@@ -1016,11 +1005,15 @@
     class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-120 bg-white shadow-2xl flex flex-col overflow-hidden"
   >
     <!-- Header -->
-    <div class="p-6 bg-linear-to-br from-yellow-600 to-yellow-500 relative overflow-hidden shrink-0">
+    <div
+      class="p-6 bg-linear-to-br from-yellow-600 to-yellow-500 relative overflow-hidden shrink-0"
+    >
       <History class="absolute -right-4 -bottom-4 w-32 h-32 text-white/5" />
       <div class="relative z-10 flex items-start justify-between gap-4">
         <div class="flex items-center gap-3.5">
-          <div class="w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center">
+          <div
+            class="w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center"
+          >
             <History class="w-5 h-5 text-white" />
           </div>
           <div>
@@ -1060,7 +1053,8 @@
         </div>
         <div class="w-px h-7 bg-slate-100"></div>
         <div class="flex-1">
-          <span class="text-base font-bold tabular-nums {net >= 0 ? 'text-slate-700' : 'text-red-500'}"
+          <span
+            class="text-base font-bold tabular-nums {net >= 0 ? 'text-slate-700' : 'text-red-500'}"
             >{net >= 0 ? '+' : '−'}{Math.abs(net)}</span
           >
           <span class="block text-[11px] text-slate-400">net</span>
@@ -1151,7 +1145,9 @@
         class="shrink-0 grid items-center gap-3 px-6 py-2 border-b border-slate-100"
         style="grid-template-columns: 1fr 70px 52px"
       >
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Article</span>
+        <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400"
+          >Article</span
+        >
         <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right"
           >Stock</span
         >
