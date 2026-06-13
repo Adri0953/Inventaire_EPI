@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { PageData } from './$types';
   import { enhance } from '$app/forms';
+  import { page } from '$app/stores';
+  import { confirmAction } from '$lib/stores/confirm';
   import {
     Package,
     ShieldCheck,
@@ -10,7 +12,6 @@
     Wrench,
     Trash2,
     X,
-    Plus,
     Save,
     UserCheck,
     UserX,
@@ -20,6 +21,7 @@
     CircleCheck,
     CircleX,
     RotateCcw,
+    Search,
   } from 'lucide-svelte';
   import { fly, fade } from 'svelte/transition';
   import { quintOut, cubicIn } from 'svelte/easing';
@@ -68,9 +70,28 @@
   let search = $state('');
   let filterStatut = $state('');
   let filterType = $state('');
+  let showSearchDropdown = $state(false);
+
+  const allChauffeurNames = $derived(
+    [...new Set(data.epis.flatMap((e) => e.historique.map((h) => h.chauffeur_nom)))].sort(),
+  );
+
+  const searchSuggestions = $derived.by(() => {
+    const q = search.toLowerCase().trim();
+    const chauffeurs = q
+      ? allChauffeurNames.filter((n) => n.toLowerCase().includes(q)).slice(0, 5)
+      : allChauffeurNames.slice(0, 6);
+    const epiNames = q
+      ? [...new Set(data.epis.map((e) => e.designation))]
+          .filter((d) => d.toLowerCase().includes(q))
+          .sort()
+          .slice(0, 4)
+      : [];
+    return { chauffeurs, epiNames };
+  });
 
   type SortCol = 'designation' | 'type' | 'statut' | 'chauffeur' | 'expiration';
-  let sortCol = $state<SortCol>('designation');
+  let sortCol = $state<SortCol>('expiration');
   let sortDir = $state<'asc' | 'desc'>('asc');
 
   function toggleSort(col: SortCol) {
@@ -93,8 +114,14 @@
   const filtered = $derived.by(() => {
     const rows = data.epis.filter((e) => {
       const q = search.toLowerCase();
-      if (q && !e.designation.toLowerCase().includes(q) && !e.type.toLowerCase().includes(q))
-        return false;
+      if (q) {
+        const matchesEpi =
+          e.designation.toLowerCase().includes(q) || e.type.toLowerCase().includes(q);
+        const matchesChauffeur = e.historique.some((h) =>
+          h.chauffeur_nom.toLowerCase().includes(q),
+        );
+        if (!matchesEpi && !matchesChauffeur) return false;
+      }
       if (filterStatut && e.statut !== filterStatut) return false;
       if (filterType && e.type !== filterType) return false;
       return true;
@@ -137,28 +164,22 @@
     attribuerChauffeurId = '';
   }
 
+  // Ouvre automatiquement la fiche d'un EPI si l'URL contient ?fiche=<id>
+  // (utilisé par le bouton « Voir la fiche » de la page Attributions).
+  let handledFiche = $state<string | null>(null);
+  $effect(() => {
+    const fiche = $page.url.searchParams.get('fiche');
+    if (fiche && fiche !== handledFiche && data.epis.some((e) => e.id_epi === fiche)) {
+      handledFiche = fiche;
+      openEpi(fiche);
+    }
+  });
+
   let confirmDelete = $state(false);
   let showAttribuerForm = $state(false);
   let showControleForm = $state(false);
   let attribuerChauffeurId = $state('');
   let controleResultat = $state('');
-
-  // ── Panel création modèle ───────────────────────────────────────────
-  let showCreatePanel = $state(false);
-  let createDesignation = $state('');
-  let createType = $state('');
-  let createTaille = $state('');
-  let createStockTotal = $state(0);
-  let createSeuilAlerte = $state(0);
-
-  function openCreatePanel() {
-    showCreatePanel = true;
-    createDesignation = '';
-    createType = '';
-    createTaille = '';
-    createStockTotal = 0;
-    createSeuilAlerte = 0;
-  }
 </script>
 
 <!-- ── PAGE ──────────────────────────────────────────────────────────────── -->
@@ -173,85 +194,149 @@
       </div>
       <div>
         <h1 class="text-3xl font-black text-violet-900 tracking-tight uppercase">EPI</h1>
-        <p class="text-sm text-slate-400 font-medium">Équipements de Protection Individuelle</p>
       </div>
     </div>
-    <button
-      onclick={openCreatePanel}
-      class="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-violet-700 text-white text-sm font-bold hover:bg-violet-600 transition-colors shadow-lg"
+    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+    <a
+      href="/stocks"
+      class="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-violet-200 text-violet-700 bg-white text-sm font-bold hover:bg-violet-50 transition-colors"
     >
-      <Plus class="w-4 h-4" />
-      Ajouter un EPI
-    </button>
+      <Package class="w-4 h-4" />
+      Gérer les stocks
+    </a>
   </div>
 
   <!-- Stats -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
     <div
-      class="relative rounded-3xl px-5 py-4 overflow-hidden shadow-xl border-2 border-violet-400 flex items-center gap-4"
-      style="background: linear-gradient(135deg, #6d28d9 0%, #a78bfa 100%)"
+      class="relative rounded-3xl px-5 py-4 overflow-hidden shadow-xl border-2 border-violet-700 flex items-center gap-4"
+      style="background: linear-gradient(90deg, #5b21b6 0%, #6d28d9 100%)"
     >
       <Package class="absolute -right-3 -bottom-3 w-20 h-20 text-white/10" />
       <span class="text-4xl font-black text-white tabular-nums leading-none shrink-0"
         >{stats.total}</span
       >
-      <p class="text-violet-100 text-sm font-bold leading-snug">EPI au total</p>
+      <p class="text-violet-200 text-sm font-bold leading-snug">EPI au total</p>
     </div>
 
     <button
       onclick={() => (filterStatut = filterStatut === 'disponible' ? '' : 'disponible')}
       class="relative rounded-3xl px-5 py-4 overflow-hidden shadow-xl border-2 text-left transition-all flex items-center gap-4
         {filterStatut === 'disponible'
-        ? 'border-emerald-300 ring-2 ring-emerald-300'
-        : 'border-emerald-400'}"
-      style="background: linear-gradient(135deg, #059669 0%, #34d399 100%)"
+        ? 'border-violet-600 ring-2 ring-violet-400'
+        : 'border-violet-500'}"
+      style="background: linear-gradient(90deg, #7c3aed 0%, #8b5cf6 100%)"
     >
       <ShieldCheck class="absolute -right-3 -bottom-3 w-20 h-20 text-white/10" />
       <span class="text-4xl font-black text-white tabular-nums leading-none shrink-0"
         >{stats.disponibles}</span
       >
-      <p class="text-emerald-100 text-sm font-bold leading-snug">Disponibles</p>
+      <p class="text-violet-100 text-sm font-bold leading-snug">Disponibles</p>
     </button>
 
     <button
       onclick={() => (filterStatut = filterStatut === 'attribué' ? '' : 'attribué')}
       class="relative rounded-3xl px-5 py-4 overflow-hidden shadow-xl border-2 text-left transition-all flex items-center gap-4
         {filterStatut === 'attribué'
-        ? 'border-indigo-300 ring-2 ring-indigo-300'
-        : 'border-indigo-400'}"
-      style="background: linear-gradient(135deg, #4338ca 0%, #818cf8 100%)"
+        ? 'border-violet-400 ring-2 ring-violet-300'
+        : 'border-violet-300'}"
+      style="background: linear-gradient(90deg, #a78bfa 0%, #c4b5fd 100%)"
     >
-      <UserCheck class="absolute -right-3 -bottom-3 w-20 h-20 text-white/10" />
-      <span class="text-4xl font-black text-white tabular-nums leading-none shrink-0"
+      <UserCheck class="absolute -right-3 -bottom-3 w-20 h-20 text-violet-600/20" />
+      <span class="text-4xl font-black text-violet-900 tabular-nums leading-none shrink-0"
         >{stats.attribues}</span
       >
-      <p class="text-indigo-100 text-sm font-bold leading-snug">Attribués</p>
+      <p class="text-violet-800 text-sm font-bold leading-snug">Attribués</p>
     </button>
 
     <button
       onclick={() => (filterStatut = filterStatut === 'hors_service' ? '' : 'hors_service')}
       class="relative rounded-3xl px-5 py-4 overflow-hidden shadow-xl border-2 text-left transition-all flex items-center gap-4
         {filterStatut === 'hors_service'
-        ? 'border-rose-300 ring-2 ring-rose-300'
-        : 'border-rose-400'}"
-      style="background: linear-gradient(135deg, #e11d48 0%, #fb7185 100%)"
+        ? 'border-violet-300 ring-2 ring-violet-200'
+        : 'border-violet-200'}"
+      style="background: linear-gradient(90deg, #ddd6fe 0%, #ede9fe 100%)"
     >
-      <ShieldX class="absolute -right-3 -bottom-3 w-20 h-20 text-white/10" />
-      <span class="text-4xl font-black text-white tabular-nums leading-none shrink-0"
+      <ShieldX class="absolute -right-3 -bottom-3 w-20 h-20 text-violet-300/40" />
+      <span class="text-4xl font-black text-violet-900 tabular-nums leading-none shrink-0"
         >{stats.horsService}</span
       >
-      <p class="text-rose-100 text-sm font-bold leading-snug">Hors service</p>
+      <p class="text-violet-600 text-sm font-bold leading-snug">Hors service</p>
     </button>
   </div>
 
   <!-- Barre de filtres -->
   <div class="flex flex-col sm:flex-row gap-3">
-    <input
-      type="search"
-      bind:value={search}
-      placeholder="Rechercher un EPI…"
-      class="flex-1 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
-    />
+    <div class="relative flex-1">
+      <Search
+        class="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400"
+      />
+      <input
+        type="search"
+        bind:value={search}
+        onfocus={() => (showSearchDropdown = true)}
+        onblur={() => setTimeout(() => (showSearchDropdown = false), 150)}
+        placeholder="Rechercher par EPI ou chauffeur…"
+        class="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pr-4 pl-10 text-sm font-medium shadow-sm focus:border-transparent focus:ring-2 focus:ring-violet-400 focus:outline-none"
+      />
+      {#if showSearchDropdown && (searchSuggestions.chauffeurs.length > 0 || searchSuggestions.epiNames.length > 0)}
+        <div
+          class="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg"
+        >
+          {#if searchSuggestions.chauffeurs.length > 0}
+            <div
+              class="border-b border-slate-100 px-3 py-2 text-[10px] font-semibold tracking-widest text-slate-400 uppercase"
+            >
+              Chauffeurs
+            </div>
+            {#each searchSuggestions.chauffeurs as name (name)}
+              <button
+                type="button"
+                onmousedown={() => {
+                  search = name;
+                  showSearchDropdown = false;
+                }}
+                class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-violet-50
+                  {search === name ? 'bg-violet-50 text-violet-700' : ''}"
+              >
+                <span
+                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-[11px] font-black text-violet-700"
+                >
+                  {name[0]?.toUpperCase()}
+                </span>
+                {name}
+              </button>
+            {/each}
+          {/if}
+          {#if searchSuggestions.epiNames.length > 0}
+            <div
+              class="border-b border-slate-100 px-3 py-2 text-[10px] font-semibold tracking-widest text-slate-400 uppercase
+                {searchSuggestions.chauffeurs.length > 0 ? 'border-t border-slate-100' : ''}"
+            >
+              EPI
+            </div>
+            {#each searchSuggestions.epiNames as name (name)}
+              <button
+                type="button"
+                onmousedown={() => {
+                  search = name;
+                  showSearchDropdown = false;
+                }}
+                class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-violet-50
+                  {search === name ? 'bg-violet-50 text-violet-700' : ''}"
+              >
+                <span
+                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-[11px] font-black text-violet-700"
+                >
+                  <Package class="h-3.5 w-3.5" />
+                </span>
+                {name}
+              </button>
+            {/each}
+          {/if}
+        </div>
+      {/if}
+    </div>
     <select
       bind:value={filterType}
       class="px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 min-w-40"
@@ -414,8 +499,17 @@
           <form
             method="POST"
             action="?/supprimer_epi"
-            use:enhance={() => {
-              if (!confirm(`Supprimer "${epi.designation}" ?`)) return () => {};
+            use:enhance={async ({ cancel }) => {
+              const ok = await confirmAction({
+                title: "Supprimer l'EPI",
+                message: `Supprimer "${epi.designation}" ? Cette action est irréversible.`,
+                confirmLabel: 'Supprimer',
+                confirmVariant: 'danger',
+              });
+              if (!ok) {
+                cancel();
+                return;
+              }
               return ({ update }) => update();
             }}
           >
@@ -509,7 +603,7 @@
                 ? 'bg-amber-50 border border-amber-200 text-amber-700'
                 : 'bg-slate-100 border border-slate-200 text-slate-500'}"
           >
-            <Clock class="w-3 h-3 shrink-0" />{expAlert === 'expired' ? 'Expiré le' : 'Exp.'}
+            <Clock class="w-3 h-3 shrink-0" />{expAlert === 'expired' ? 'Expiré le' : 'Expire le'}
             {formatDate(selectedEpi.date_expiration)}
           </span>
         {/if}
@@ -539,15 +633,21 @@
             <div class="flex items-center gap-2">
               <UserCheck class="w-3.5 h-3.5 text-blue-500" />
               <span class="text-[11px] font-semibold text-blue-600 uppercase tracking-widest"
-                >Attribution</span
+                >Chauffeur</span
               >
             </div>
             {#if selectedEpi.statut === 'attribué' && activeAttr}
               <form
                 method="POST"
                 action="?/retirer_epi"
-                use:enhance={({ cancel }) => {
-                  if (!confirm(`Retirer "${selectedEpi?.designation}" du chauffeur ?`)) {
+                use:enhance={async ({ cancel }) => {
+                  const ok = await confirmAction({
+                    title: "Retirer l'EPI",
+                    message: `Retirer "${selectedEpi?.designation}" du chauffeur ?`,
+                    confirmLabel: 'Retirer',
+                    confirmVariant: 'danger',
+                  });
+                  if (!ok) {
                     cancel();
                     return;
                   }
@@ -855,8 +955,14 @@
           <form
             method="POST"
             action="?/hors_service"
-            use:enhance={({ cancel }) => {
-              if (!confirm(`Marquer "${selectedEpi?.designation}" comme hors service ?`)) {
+            use:enhance={async ({ cancel }) => {
+              const ok = await confirmAction({
+                title: 'Mettre hors service',
+                message: `Marquer "${selectedEpi?.designation}" comme hors service ?`,
+                confirmLabel: 'Confirmer',
+                confirmVariant: 'danger',
+              });
+              if (!ok) {
                 cancel();
                 return;
               }
@@ -929,172 +1035,5 @@
         </div>
       {/if}
     </div>
-  </div>
-{/if}
-
-<!-- ── PANEL CRÉATION ──────────────────────────────────────────────────────── -->
-{#if showCreatePanel}
-  <button
-    transition:fade={{ duration: 200 }}
-    class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
-    onclick={() => (showCreatePanel = false)}
-    aria-label="Fermer"
-  ></button>
-
-  <div
-    in:fly={{ x: 560, duration: 380, easing: quintOut }}
-    out:fly={{ x: 560, duration: 250, easing: cubicIn }}
-    class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-120 bg-white shadow-2xl flex flex-col overflow-hidden"
-  >
-    <!-- En-tête -->
-    <div
-      class="p-6 bg-linear-to-br from-violet-900 to-violet-700 relative overflow-hidden shrink-0"
-    >
-      <Plus class="absolute -right-4 -bottom-4 w-32 h-32 text-white/5" />
-      <div class="relative z-10 flex items-start justify-between gap-4">
-        <div class="flex items-center gap-3.5">
-          <div
-            class="w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center"
-          >
-            <Package class="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 class="text-lg font-bold text-white">Nouvel EPI</h2>
-            <p class="text-violet-300 text-xs mt-0.5">Définir un nouvel équipement</p>
-          </div>
-        </div>
-        <button
-          onclick={() => (showCreatePanel = false)}
-          class="p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors shrink-0"
-        >
-          <X class="w-4.5 h-4.5" />
-        </button>
-      </div>
-    </div>
-
-    <!-- Corps -->
-    <form
-      method="POST"
-      action="?/creer_modele"
-      use:enhance={({ cancel }) => {
-        if (!createDesignation || !createType) {
-          cancel();
-          return;
-        }
-        return ({ update }) => {
-          showCreatePanel = false;
-          update();
-        };
-      }}
-      class="flex-1 overflow-y-auto flex flex-col"
-    >
-      <div class="flex-1 p-6 space-y-5">
-        <!-- Désignation -->
-        <div class="space-y-1.5">
-          <!-- svelte-ignore a11y_label_has_associated_control -->
-          <label class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-            Désignation <span class="text-red-400">*</span>
-          </label>
-          <input
-            type="text"
-            name="designation"
-            bind:value={createDesignation}
-            placeholder="ex : Casque de chantier"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-sm
-              focus:outline-none focus:ring-2 focus:ring-violet-400/30 focus:border-violet-500 focus:bg-white transition-all"
-          />
-        </div>
-
-        <!-- Type -->
-        <div class="space-y-1.5">
-          <!-- svelte-ignore a11y_label_has_associated_control -->
-          <label class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-            Type <span class="text-red-400">*</span>
-          </label>
-          <input
-            type="text"
-            name="type"
-            bind:value={createType}
-            placeholder="ex : Protection tête"
-            list="types-existants"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-sm
-              focus:outline-none focus:ring-2 focus:ring-violet-400/30 focus:border-violet-500 focus:bg-white transition-all"
-          />
-          <datalist id="types-existants">
-            {#each allTypes as t (t)}
-              <option value={t}></option>
-            {/each}
-          </datalist>
-        </div>
-
-        <!-- Taille -->
-        <div class="space-y-1.5">
-          <!-- svelte-ignore a11y_label_has_associated_control -->
-          <label class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-            Taille <span class="text-slate-300 font-normal normal-case tracking-normal"
-              >(optionnel)</span
-            >
-          </label>
-          <input
-            type="text"
-            name="taille"
-            bind:value={createTaille}
-            placeholder="ex : M, L, XL, 42…"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-sm
-              focus:outline-none focus:ring-2 focus:ring-violet-400/30 focus:border-violet-500 focus:bg-white transition-all"
-          />
-        </div>
-
-        <!-- Stock total + Seuil alerte -->
-        <div class="grid grid-cols-2 gap-3">
-          <div class="space-y-1.5">
-            <!-- svelte-ignore a11y_label_has_associated_control -->
-            <label class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-              Stock total
-            </label>
-            <input
-              type="number"
-              name="stock_total"
-              bind:value={createStockTotal}
-              min="0"
-              class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-sm
-                focus:outline-none focus:ring-2 focus:ring-violet-400/30 focus:border-violet-500 focus:bg-white transition-all"
-            />
-          </div>
-          <div class="space-y-1.5">
-            <!-- svelte-ignore a11y_label_has_associated_control -->
-            <label class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-              Seuil d'alerte
-            </label>
-            <input
-              type="number"
-              name="seuil_alerte"
-              bind:value={createSeuilAlerte}
-              min="0"
-              class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-sm
-                focus:outline-none focus:ring-2 focus:ring-violet-400/30 focus:border-violet-500 focus:bg-white transition-all"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- Pied -->
-      <div class="shrink-0 px-6 py-4 border-t border-slate-100 bg-white flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={!createDesignation || !createType}
-          class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-violet-700 text-white text-sm font-bold hover:bg-violet-600 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <Plus class="w-4 h-4" />Créer l'EPI
-        </button>
-        <button
-          type="button"
-          onclick={() => (showCreatePanel = false)}
-          class="px-5 py-3 rounded-xl border border-slate-200 text-slate-500 text-sm font-medium hover:bg-slate-50 transition-colors"
-        >
-          Annuler
-        </button>
-      </div>
-    </form>
   </div>
 {/if}

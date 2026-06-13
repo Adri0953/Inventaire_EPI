@@ -146,12 +146,27 @@ export const actions: Actions = {
 
     const today = new Date().toISOString().split('T')[0];
 
+    const { data: epiRow } = await supabase
+      .from('epi')
+      .select('id_modele_epi, modele_epi(stock_total)')
+      .eq('id_epi', id_epi)
+      .single();
+
+    const modele = Array.isArray(epiRow?.modele_epi) ? epiRow.modele_epi[0] : epiRow?.modele_epi;
+    const currentStock = (modele as { stock_total: number } | null)?.stock_total ?? 0;
+
     await Promise.all([
       supabase
         .from('attribution')
         .update({ date_retour: today, motif_retour: 'Mise hors service', etat_epi: 'hors_service' })
         .eq('id_attribution', id_attribution),
       supabase.from('epi').update({ statut: 'hors_service' }).eq('id_epi', id_epi),
+      epiRow
+        ? supabase
+            .from('modele_epi')
+            .update({ stock_total: Math.max(0, currentStock - 1) })
+            .eq('id_modele_epi', epiRow.id_modele_epi)
+        : Promise.resolve(),
     ]);
 
     return { success: true };

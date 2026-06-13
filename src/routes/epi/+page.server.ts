@@ -94,22 +94,6 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions: Actions = {
-  creer_modele: async ({ request }) => {
-    const fd = await request.formData();
-    const designation = fd.get('designation') as string;
-    const type = fd.get('type') as string;
-    const taille = (fd.get('taille') as string) || null;
-    const stock_total = parseInt(fd.get('stock_total') as string) || 0;
-    const seuil_alerte = parseInt(fd.get('seuil_alerte') as string) || 0;
-    if (!designation || !type) return fail(400, { error: 'Désignation et type requis' });
-
-    const { error } = await supabase
-      .from('modele_epi')
-      .insert({ designation, type, taille, stock_total, seuil_alerte });
-    if (error) return fail(500, { error: 'Erreur création' });
-    return { success: true };
-  },
-
   supprimer_epi: async ({ request }) => {
     const fd = await request.formData();
     const id_epi = fd.get('id_epi') as string;
