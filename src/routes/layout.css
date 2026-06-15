@@ -31,7 +31,11 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(110deg, var(--h-dark) 0%, color-mix(in srgb, var(--h-dark) 70%, var(--h-accent)) 100%);
+  background: linear-gradient(
+    110deg,
+    var(--h-dark) 0%,
+    color-mix(in srgb, var(--h-dark) 70%, var(--h-accent)) 100%
+  );
   padding: 0 2.5rem;
   height: 64px;
   position: sticky;
@@ -39,7 +43,9 @@ body {
   z-index: 50;
   box-shadow: 0 4px 20px color-mix(in srgb, var(--h-dark) 50%, transparent);
   view-transition-name: app-header;
-  transition: background 0.45s ease, box-shadow 0.45s ease;
+  transition:
+    background 0.45s ease,
+    box-shadow 0.45s ease;
 }
 
 /* fine ligne d'accent lumineuse en bas du header */
@@ -68,7 +74,7 @@ body {
   height: 36px;
   border-radius: 8px;
   object-fit: cover;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .header-title h1 {
@@ -135,7 +141,9 @@ body {
   border-bottom-color: color-mix(in srgb, var(--h-accent) 75%, white);
   font-weight: 700;
   text-shadow: 0 0 16px color-mix(in srgb, var(--h-accent) 60%, transparent);
-  transition: border-bottom-color 0.45s ease, text-shadow 0.45s ease;
+  transition:
+    border-bottom-color 0.45s ease,
+    text-shadow 0.45s ease;
 }
 
 .app-main {

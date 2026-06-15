@@ -16,7 +16,7 @@
     '/chauffeurs': { dark: '#1d4ed8', accent: '#2563eb' },
     '/epi': { dark: '#5b21b6', accent: '#7c3aed' },
     '/attributions': { dark: '#047857', accent: '#059669' },
-    '/stocks': { dark: '#d4a017', accent: '#eab308' }
+    '/stocks': { dark: '#d4a017', accent: '#eab308' },
   };
   const DEFAULT_ACCENT = { dark: '#0f1f5c', accent: '#3b82f6' };
 
@@ -25,9 +25,8 @@
   $: nextRoute = currentIndex < ROUTES.length - 1 ? ROUTES[currentIndex + 1] : null;
 
   $: theme =
-    ROUTES.map((r) => ({ r, t: ACCENTS[r] })).find(({ r }) =>
-      $page.url.pathname.startsWith(r)
-    )?.t ?? DEFAULT_ACCENT;
+    ROUTES.map((r) => ({ r, t: ACCENTS[r] })).find(({ r }) => $page.url.pathname.startsWith(r))
+      ?.t ?? DEFAULT_ACCENT;
 
   onNavigate((nav) => {
     if (!document.startViewTransition) return;
