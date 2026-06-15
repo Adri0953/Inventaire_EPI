@@ -773,7 +773,11 @@
           {@const isExpiringSoon = !isExpired && expDays <= 30}
           <div
             class="bg-white rounded-xl border-2 overflow-hidden
-              {isExpired ? 'border-red-200' : isExpiringSoon ? 'border-amber-200' : 'border-emerald-200'}"
+              {isExpired
+              ? 'border-red-200'
+              : isExpiringSoon
+                ? 'border-amber-200'
+                : 'border-emerald-200'}"
           >
             <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100">
               <div class="flex items-center gap-2">
@@ -879,7 +883,11 @@
                         ? 'text-amber-600'
                         : 'text-emerald-600'}"
                   >
-                    {isExpired ? 'EPI expiré' : isExpiringSoon ? 'Expiration proche' : "Date d'expiration"}
+                    {isExpired
+                      ? 'EPI expiré'
+                      : isExpiringSoon
+                        ? 'Expiration proche'
+                        : "Date d'expiration"}
                   </p>
                   <p class="text-sm font-semibold text-slate-800 mt-0.5">
                     {formatDate(selectedEpi.date_expiration)}
@@ -902,7 +910,6 @@
               </div>
             </div>
           </div>
-
         {:else}
           <!-- ── Carte Contrôles (EPIs à maintenance périodique) ──── -->
           <div class="bg-white rounded-xl border-2 border-orange-200 overflow-hidden">
