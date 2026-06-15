@@ -942,7 +942,7 @@
               {@const status = getEpiStatus(epi)}
               {@const days = epi.date_expiration ? daysUntil(epi.date_expiration) : null}
               {@const controlDays = epi.prochain_controle ? daysUntil(epi.prochain_controle) : null}
-              <div class="rounded-2xl border-2 border-violet-300 bg-white shadow-sm overflow-hidden">
+              <div class="rounded-2xl border-2 border-violet-300 bg-white shadow-sm">
                 <div class="flex">
                   <div
                     role="button"
@@ -973,7 +973,7 @@
                           <p
                             class="text-[10px] font-bold text-red-500 mt-1.5 flex items-center gap-1"
                           >
-                            <Clock class="w-3 h-3 shrink-0" />{formatDate(epi.date_expiration)}
+                            <Clock class="w-3 h-3 shrink-0" />Expiré le {formatDate(epi.date_expiration)}
                           </p>
                         {:else if status === 'control_overdue'}
                           <p
@@ -987,7 +987,7 @@
                           <p
                             class="text-[10px] font-bold text-orange-500 mt-1.5 flex items-center gap-1"
                           >
-                            <Clock class="w-3 h-3 shrink-0" />Dans {days} jour{days !== 1
+                            <Clock class="w-3 h-3 shrink-0" />Expire dans {days} jour{days !== 1
                               ? 's'
                               : ''} · {formatDate(epi.date_expiration)}
                           </p>
@@ -1067,41 +1067,6 @@
                                   <X class="w-3.5 h-3.5" />Retirer
                                 </button>
                               </form>
-                              {#if status !== 'expired'}
-                                <form
-                                  method="POST"
-                                  action="?/hors_service"
-                                  use:enhance={async ({ cancel }) => {
-                                    const ok = await confirmAction({
-                                      title: 'Mettre hors service',
-                                      message: `Marquer "${epi.designation}" comme hors service ? Il sera désattribué et le stock diminuera de 1.`,
-                                      confirmLabel: 'Confirmer',
-                                      confirmVariant: 'danger',
-                                    });
-                                    if (!ok) {
-                                      cancel();
-                                      return;
-                                    }
-                                    return ({ update }) => {
-                                      epiMenuOpen = {};
-                                      update();
-                                    };
-                                  }}
-                                >
-                                  <input
-                                    type="hidden"
-                                    name="id_attribution"
-                                    value={epi.id_attribution}
-                                  />
-                                  <input type="hidden" name="id_epi" value={epi.id_epi} />
-                                  <button
-                                    type="submit"
-                                    class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-red-600 hover:bg-red-50 transition-colors text-left"
-                                  >
-                                    <ShieldX class="w-3.5 h-3.5" />Hors service
-                                  </button>
-                                </form>
-                              {/if}
                               <button
                                 type="button"
                                 onclick={() => {
