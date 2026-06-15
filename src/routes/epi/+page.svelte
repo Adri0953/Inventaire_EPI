@@ -26,6 +26,7 @@
   } from 'lucide-svelte';
   import { fly, fade } from 'svelte/transition';
   import { quintOut, cubicIn } from 'svelte/easing';
+  import InfiniteScrollSentinel from '$lib/components/InfiniteScrollSentinel.svelte';
 
   let { data }: { data: PageData } = $props();
 
@@ -145,6 +146,15 @@
 
     return rows;
   });
+
+  // ── Pagination infinie ────────────────────────────────────────────────
+  const PAGE_SIZE = 15;
+  let visibleCount = $state(PAGE_SIZE);
+  $effect(() => {
+    search; filterStatut; filterType; sortCol; sortDir;
+    visibleCount = PAGE_SIZE;
+  });
+  const visible = $derived(filtered.slice(0, visibleCount));
 
   // ── Panel de détail ────────────────────────────────────────────────
   let selectedEpiId = $state<string | null>(null);
@@ -406,7 +416,7 @@
       </div>
     {/if}
 
-    {#each filtered as epi (epi.id_epi)}
+    {#each visible as epi (epi.id_epi)}
       {@const alert = getAlertLevel(epi)}
       {@const activeA = epi.historique.find((h) => !h.date_retour)}
       <div
@@ -528,6 +538,10 @@
         </div>
       </div>
     {/each}
+    <InfiniteScrollSentinel
+      hasMore={visibleCount < filtered.length}
+      onLoadMore={() => (visibleCount += PAGE_SIZE)}
+    />
   </div>
 </div>
 
