@@ -985,7 +985,9 @@
           </div>
           <div class="min-w-0">
             <h2 class="text-lg font-bold text-white leading-tight">Nouvelle attribution</h2>
-            <p class="text-emerald-300 text-xs mt-0.5">Attribuer un EPI disponible à un chauffeur</p>
+            <p class="text-emerald-300 text-xs mt-0.5">
+              Attribuer un EPI disponible à un chauffeur
+            </p>
           </div>
         </div>
         <button
