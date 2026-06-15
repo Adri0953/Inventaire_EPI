@@ -183,4 +183,60 @@ export const actions: Actions = {
     if (error) return fail(500, { error: 'Erreur enregistrement' });
     return { success: true };
   },
+
+  remplacer_epi: async ({ request }) => {
+    const fd = await request.formData();
+    const id_epi = fd.get('id_epi') as string;
+    const id_modele_epi = fd.get('id_modele_epi') as string;
+    const id_attribution = (fd.get('id_attribution') as string) || null;
+    const id_chauffeur = (fd.get('id_chauffeur') as string) || null;
+    if (!id_epi || !id_modele_epi) return fail(400, { error: 'Données manquantes' });
+
+    const today = new Date().toISOString().split('T')[0];
+
+    // Marquer l'ancien EPI hors service et clore l'attribution
+    await supabase.from('epi').update({ statut: 'hors_service' }).eq('id_epi', id_epi);
+    if (id_attribution) {
+      await supabase
+        .from('attribution')
+        .update({ date_retour: today, motif_retour: 'EPI expiré — remplacé' })
+        .eq('id_attribution', id_attribution);
+    }
+
+    // Décrémenter stock_total et enregistrer l'historique
+    const { data: modele } = await supabase
+      .from('modele_epi')
+      .select('stock_total')
+      .eq('id_modele_epi', id_modele_epi)
+      .single();
+    const ancienne_valeur = modele?.stock_total ?? 0;
+    const nouvelle_valeur = Math.max(0, ancienne_valeur - 1);
+    await supabase
+      .from('modele_epi')
+      .update({ stock_total: nouvelle_valeur })
+      .eq('id_modele_epi', id_modele_epi);
+    await supabase.from('historique_stock').insert({
+      id_modele_epi,
+      ancienne_valeur,
+      nouvelle_valeur,
+      motif: 'EPI expiré retiré du stock',
+    });
+
+    // Créer le nouvel EPI (même modèle, pas de date_expiration — à renseigner si besoin)
+    const { data: newEpi, error } = await supabase
+      .from('epi')
+      .insert({ id_modele_epi, statut: id_chauffeur ? 'attribué' : 'disponible' })
+      .select('id_epi')
+      .single();
+    if (error || !newEpi) return fail(500, { error: 'Erreur création nouvel EPI' });
+
+    // Transférer l'attribution au nouvel EPI si applicable
+    if (id_chauffeur) {
+      await supabase
+        .from('attribution')
+        .insert({ id_epi: newEpi.id_epi, id_chauffeur, date_attribution: today });
+    }
+
+    return { success: true };
+  },
 };

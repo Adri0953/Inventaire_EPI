@@ -22,6 +22,7 @@
     CircleX,
     RotateCcw,
     Search,
+    PackagePlus,
   } from 'lucide-svelte';
   import { fly, fade } from 'svelte/transition';
   import { quintOut, cubicIn } from 'svelte/easing';
@@ -161,6 +162,7 @@
     confirmDelete = false;
     showAttribuerForm = false;
     showControleForm = false;
+    showRemplaceForm = false;
     attribuerChauffeurId = '';
   }
 
@@ -178,6 +180,7 @@
   let confirmDelete = $state(false);
   let showAttribuerForm = $state(false);
   let showControleForm = $state(false);
+  let showRemplaceForm = $state(false);
   let attribuerChauffeurId = $state('');
   let controleResultat = $state('');
 </script>
@@ -547,7 +550,7 @@
       class="p-6 bg-linear-to-br from-violet-900 to-violet-700 relative overflow-hidden shrink-0"
     >
       <Package class="absolute -right-4 -bottom-4 w-32 h-32 text-white/5" />
-      <div class="relative z-10 flex items-start justify-between gap-4 mb-5">
+      <div class="relative z-10 flex items-start justify-between gap-4 mb-4">
         <div class="flex items-center gap-3.5">
           <div
             class="w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0"
@@ -763,186 +766,332 @@
           {/if}
         </div>
 
-        <!-- ── Carte Contrôles ────────────────────────────────────── -->
-        <div class="bg-white rounded-xl border-2 border-orange-200 overflow-hidden">
-          <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <div class="flex items-center gap-2">
-              <Wrench class="w-3.5 h-3.5 text-orange-500" />
-              <span class="text-[11px] font-semibold text-orange-600 uppercase tracking-widest">
-                Contrôles{#if selectedEpi.controles.length > 0}
-                  ({selectedEpi.controles.length}){/if}
-              </span>
+        <!-- ── Carte Expiration (EPIs à durée de vie) ───────────── -->
+        {#if selectedEpi.date_expiration}
+          {@const expDays = daysUntil(selectedEpi.date_expiration)}
+          {@const isExpired = expDays < 0}
+          {@const isExpiringSoon = !isExpired && expDays <= 30}
+          <div
+            class="bg-white rounded-xl border-2 overflow-hidden
+              {isExpired
+              ? 'border-red-200'
+              : isExpiringSoon
+                ? 'border-amber-200'
+                : 'border-emerald-200'}"
+          >
+            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <Clock
+                  class="w-3.5 h-3.5 {isExpired
+                    ? 'text-red-500'
+                    : isExpiringSoon
+                      ? 'text-amber-500'
+                      : 'text-emerald-500'}"
+                />
+                <span
+                  class="text-[11px] font-semibold uppercase tracking-widest
+                    {isExpired
+                    ? 'text-red-600'
+                    : isExpiringSoon
+                      ? 'text-amber-600'
+                      : 'text-emerald-600'}"
+                >
+                  Expiration
+                </span>
+              </div>
+              {#if isExpired || isExpiringSoon}
+                <button
+                  type="button"
+                  onclick={() => (showRemplaceForm = !showRemplaceForm)}
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-50 border border-orange-300 text-orange-600 text-xs font-semibold hover:bg-orange-100 transition-colors"
+                >
+                  <PackagePlus class="w-3 h-3" />Remplacer l'EPI
+                </button>
+              {/if}
             </div>
-            <button
-              type="button"
-              onclick={() => (showControleForm = !showControleForm)}
-              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-50 border border-orange-300 text-orange-600 text-xs font-semibold hover:bg-orange-100 transition-colors"
-            >
-              <CircleCheck class="w-3 h-3" />Nouveau contrôle
-            </button>
-          </div>
 
-          <div class="p-4 space-y-3">
-            {#if showControleForm}
-              <form
-                method="POST"
-                action="?/ajouter_controle"
-                use:enhance={({ cancel }) => {
-                  if (!controleResultat) {
-                    cancel();
-                    return;
-                  }
-                  return ({ update }) => {
-                    showControleForm = false;
-                    controleResultat = '';
-                    update();
-                  };
-                }}
-                class="rounded-lg border border-slate-100 bg-slate-50 p-4 space-y-3"
-                in:fly={{ y: -8, duration: 180 }}
-              >
-                <input type="hidden" name="id_epi" value={selectedEpi.id_epi} />
-                <input type="hidden" name="resultat" value={controleResultat} />
-                <p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-                  Résultat du contrôle
-                </p>
-                <div class="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onclick={() => (controleResultat = 'conforme')}
-                    class="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border-2 text-xs font-semibold transition-all
-                      {controleResultat === 'conforme'
-                      ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
-                      : 'border-slate-200 bg-white text-slate-500 hover:border-emerald-200 hover:text-emerald-600'}"
-                  >
-                    <CircleCheck class="w-3.5 h-3.5" />Conforme
-                  </button>
-                  <button
-                    type="button"
-                    onclick={() => (controleResultat = 'à_remplacer')}
-                    class="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border-2 text-xs font-semibold transition-all
-                      {controleResultat === 'à_remplacer'
-                      ? 'border-red-400 bg-red-50 text-red-700'
-                      : 'border-slate-200 bg-white text-slate-500 hover:border-red-200 hover:text-red-600'}"
-                  >
-                    <CircleX class="w-3.5 h-3.5" />À remplacer
-                  </button>
-                </div>
-                <p class="text-xs text-slate-400">Aujourd'hui · Prochain contrôle dans 1 an</p>
-                <div class="flex gap-2">
-                  <button
-                    type="submit"
-                    disabled={!controleResultat}
-                    class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-700 transition-colors disabled:opacity-40"
-                  >
-                    <Save class="w-3.5 h-3.5" />Enregistrer
-                  </button>
-                  <button
-                    type="button"
-                    onclick={() => {
-                      showControleForm = false;
-                      controleResultat = '';
-                    }}
-                    class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
-                  >
-                    Annuler
-                  </button>
-                </div>
-              </form>
-            {/if}
+            <div class="p-4 space-y-3">
+              <!-- Formulaire de remplacement -->
+              {#if showRemplaceForm}
+                <form
+                  method="POST"
+                  action="?/remplacer_epi"
+                  use:enhance={async ({ cancel }) => {
+                    const ok = await confirmAction({
+                      title: "Remplacer l'EPI",
+                      message: `Remplacer "${selectedEpi?.designation}" expiré par un nouvel EPI du même modèle ? Le stock sera décrémenté de 1.`,
+                      confirmLabel: 'Remplacer',
+                      confirmVariant: 'danger',
+                    });
+                    if (!ok) {
+                      cancel();
+                      return;
+                    }
+                    return ({ update }) => {
+                      showRemplaceForm = false;
+                      selectedEpiId = null;
+                      update();
+                    };
+                  }}
+                  class="rounded-lg border border-slate-100 bg-slate-50 p-4 space-y-3"
+                  in:fly={{ y: -8, duration: 180 }}
+                >
+                  <input type="hidden" name="id_epi" value={selectedEpi.id_epi} />
+                  <input type="hidden" name="id_modele_epi" value={selectedEpi.id_modele_epi} />
+                  {#if activeAttr}
+                    <input type="hidden" name="id_attribution" value={activeAttr.id_attribution} />
+                    <input type="hidden" name="id_chauffeur" value={activeAttr.id_chauffeur} />
+                  {/if}
+                  <p class="text-xs text-slate-500">
+                    L'EPI expiré sera mis hors service et retiré du stock total (-1). Un nouvel EPI
+                    du même modèle sera créé{#if activeAttr}
+                      et attribué à <strong>{activeAttr.chauffeur_nom}</strong>{/if}.
+                  </p>
+                  <div class="flex gap-2">
+                    <button
+                      type="submit"
+                      class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-700 transition-colors"
+                    >
+                      <PackagePlus class="w-3.5 h-3.5" />Confirmer le remplacement
+                    </button>
+                    <button
+                      type="button"
+                      onclick={() => (showRemplaceForm = false)}
+                      class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+              {/if}
 
-            <!-- Prochain contrôle -->
-            {#if latestCtrl?.prochain_controle}
+              <!-- Statut expiration -->
               <div
                 class="flex items-center gap-3 rounded-lg px-3.5 py-3 border
-                  {ctrlDays !== null && ctrlDays < 0
+                  {isExpired
                   ? 'bg-red-50 border-red-100'
-                  : ctrlDays !== null && ctrlDays <= 30
+                  : isExpiringSoon
                     ? 'bg-amber-50 border-amber-100'
                     : 'bg-emerald-50 border-emerald-100'}"
               >
                 <div class="flex-1 min-w-0">
                   <p
                     class="text-[10px] font-semibold uppercase tracking-widest
-                      {ctrlDays !== null && ctrlDays < 0
+                      {isExpired
                       ? 'text-red-500'
-                      : ctrlDays !== null && ctrlDays <= 30
+                      : isExpiringSoon
                         ? 'text-amber-600'
                         : 'text-emerald-600'}"
                   >
-                    {ctrlDays !== null && ctrlDays < 0 ? 'Contrôle dépassé' : 'Prochain contrôle'}
+                    {isExpired
+                      ? 'EPI expiré'
+                      : isExpiringSoon
+                        ? 'Expiration proche'
+                        : "Date d'expiration"}
                   </p>
                   <p class="text-sm font-semibold text-slate-800 mt-0.5">
-                    {formatDate(latestCtrl.prochain_controle)}
+                    {formatDate(selectedEpi.date_expiration)}
                   </p>
                 </div>
                 <span
                   class="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0
-                    {ctrlDays !== null && ctrlDays < 0
+                    {isExpired
                     ? 'bg-red-100 text-red-700'
-                    : ctrlDays !== null && ctrlDays <= 30
+                    : isExpiringSoon
                       ? 'bg-amber-100 text-amber-700'
                       : 'bg-emerald-100 text-emerald-700'}"
                 >
-                  {#if ctrlDays !== null && ctrlDays < 0}
-                    {Math.abs(ctrlDays)}j de retard
-                  {:else if ctrlDays !== null}
-                    J-{ctrlDays}
+                  {#if isExpired}
+                    {Math.abs(expDays)}j dépassé
                   {:else}
-                    —
+                    J-{expDays}
                   {/if}
                 </span>
               </div>
-            {:else if selectedEpi.controles.length === 0}
-              <div class="flex items-center gap-2 py-2 text-slate-400">
-                <Wrench class="w-4 h-4 shrink-0" />
-                <p class="text-xs">Aucun contrôle enregistré</p>
+            </div>
+          </div>
+        {:else}
+          <!-- ── Carte Contrôles (EPIs à maintenance périodique) ──── -->
+          <div class="bg-white rounded-xl border-2 border-orange-200 overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <Wrench class="w-3.5 h-3.5 text-orange-500" />
+                <span class="text-[11px] font-semibold text-orange-600 uppercase tracking-widest">
+                  Contrôles{#if selectedEpi.controles.length > 0}
+                    ({selectedEpi.controles.length}){/if}
+                </span>
               </div>
-            {/if}
+              <button
+                type="button"
+                onclick={() => (showControleForm = !showControleForm)}
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-50 border border-orange-300 text-orange-600 text-xs font-semibold hover:bg-orange-100 transition-colors"
+              >
+                <CircleCheck class="w-3 h-3" />Nouveau contrôle
+              </button>
+            </div>
 
-            <!-- Historique contrôles -->
-            {#if selectedEpi.controles.length > 0}
-              <div class="space-y-0.5">
-                <p
-                  class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 pt-1 pb-1"
+            <div class="p-4 space-y-3">
+              {#if showControleForm}
+                <form
+                  method="POST"
+                  action="?/ajouter_controle"
+                  use:enhance={({ cancel }) => {
+                    if (!controleResultat) {
+                      cancel();
+                      return;
+                    }
+                    return ({ update }) => {
+                      showControleForm = false;
+                      controleResultat = '';
+                      update();
+                    };
+                  }}
+                  class="rounded-lg border border-slate-100 bg-slate-50 p-4 space-y-3"
+                  in:fly={{ y: -8, duration: 180 }}
                 >
-                  Historique
-                </p>
-                {#each selectedEpi.controles as ctrl (ctrl.id_controle)}
-                  {@const isConforme = ctrl.resultat === 'conforme'}
-                  <div
-                    class="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0"
+                  <input type="hidden" name="id_epi" value={selectedEpi.id_epi} />
+                  <input type="hidden" name="resultat" value={controleResultat} />
+                  <p class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                    Résultat du contrôle
+                  </p>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onclick={() => (controleResultat = 'conforme')}
+                      class="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border-2 text-xs font-semibold transition-all
+                        {controleResultat === 'conforme'
+                        ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
+                        : 'border-slate-200 bg-white text-slate-500 hover:border-emerald-200 hover:text-emerald-600'}"
+                    >
+                      <CircleCheck class="w-3.5 h-3.5" />Conforme
+                    </button>
+                    <button
+                      type="button"
+                      onclick={() => (controleResultat = 'à_remplacer')}
+                      class="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border-2 text-xs font-semibold transition-all
+                        {controleResultat === 'à_remplacer'
+                        ? 'border-red-400 bg-red-50 text-red-700'
+                        : 'border-slate-200 bg-white text-slate-500 hover:border-red-200 hover:text-red-600'}"
+                    >
+                      <CircleX class="w-3.5 h-3.5" />À remplacer
+                    </button>
+                  </div>
+                  <p class="text-xs text-slate-400">Aujourd'hui · Prochain contrôle dans 1 an</p>
+                  <div class="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={!controleResultat}
+                      class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-700 transition-colors disabled:opacity-40"
+                    >
+                      <Save class="w-3.5 h-3.5" />Enregistrer
+                    </button>
+                    <button
+                      type="button"
+                      onclick={() => {
+                        showControleForm = false;
+                        controleResultat = '';
+                      }}
+                      class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+              {/if}
+
+              <!-- Prochain contrôle -->
+              {#if latestCtrl?.prochain_controle}
+                <div
+                  class="flex items-center gap-3 rounded-lg px-3.5 py-3 border
+                    {ctrlDays !== null && ctrlDays < 0
+                    ? 'bg-red-50 border-red-100'
+                    : ctrlDays !== null && ctrlDays <= 30
+                      ? 'bg-amber-50 border-amber-100'
+                      : 'bg-emerald-50 border-emerald-100'}"
+                >
+                  <div class="flex-1 min-w-0">
+                    <p
+                      class="text-[10px] font-semibold uppercase tracking-widest
+                        {ctrlDays !== null && ctrlDays < 0
+                        ? 'text-red-500'
+                        : ctrlDays !== null && ctrlDays <= 30
+                          ? 'text-amber-600'
+                          : 'text-emerald-600'}"
+                    >
+                      {ctrlDays !== null && ctrlDays < 0 ? 'Contrôle dépassé' : 'Prochain contrôle'}
+                    </p>
+                    <p class="text-sm font-semibold text-slate-800 mt-0.5">
+                      {formatDate(latestCtrl.prochain_controle)}
+                    </p>
+                  </div>
+                  <span
+                    class="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0
+                      {ctrlDays !== null && ctrlDays < 0
+                      ? 'bg-red-100 text-red-700'
+                      : ctrlDays !== null && ctrlDays <= 30
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-emerald-100 text-emerald-700'}"
                   >
-                    {#if isConforme}
-                      <CircleCheck class="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    {#if ctrlDays !== null && ctrlDays < 0}
+                      {Math.abs(ctrlDays)}j de retard
+                    {:else if ctrlDays !== null}
+                      J-{ctrlDays}
                     {:else}
-                      <CircleX class="w-3.5 h-3.5 text-red-400 shrink-0" />
+                      —
                     {/if}
-                    <div class="flex-1 min-w-0">
-                      <p
-                        class="text-xs font-semibold {isConforme
-                          ? 'text-emerald-700'
-                          : 'text-red-600'}"
-                      >
-                        {isConforme ? 'Conforme' : 'À remplacer'}
-                      </p>
-                      {#if ctrl.date_controle}
-                        <p class="text-[10px] text-slate-400">
-                          Effectué le {formatDate(ctrl.date_controle)}
+                  </span>
+                </div>
+              {:else if selectedEpi.controles.length === 0}
+                <div class="flex items-center gap-2 py-2 text-slate-400">
+                  <Wrench class="w-4 h-4 shrink-0" />
+                  <p class="text-xs">Aucun contrôle enregistré</p>
+                </div>
+              {/if}
+
+              <!-- Historique contrôles -->
+              {#if selectedEpi.controles.length > 0}
+                <div class="space-y-0.5">
+                  <p
+                    class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 pt-1 pb-1"
+                  >
+                    Historique
+                  </p>
+                  {#each selectedEpi.controles as ctrl (ctrl.id_controle)}
+                    {@const isConforme = ctrl.resultat === 'conforme'}
+                    <div
+                      class="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0"
+                    >
+                      {#if isConforme}
+                        <CircleCheck class="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      {:else}
+                        <CircleX class="w-3.5 h-3.5 text-red-400 shrink-0" />
+                      {/if}
+                      <div class="flex-1 min-w-0">
+                        <p
+                          class="text-xs font-semibold {isConforme
+                            ? 'text-emerald-700'
+                            : 'text-red-600'}"
+                        >
+                          {isConforme ? 'Conforme' : 'À remplacer'}
                         </p>
+                        {#if ctrl.date_controle}
+                          <p class="text-[10px] text-slate-400">
+                            Effectué le {formatDate(ctrl.date_controle)}
+                          </p>
+                        {/if}
+                      </div>
+                      {#if ctrl.prochain_controle}
+                        <span class="text-[10px] text-slate-400 tabular-nums shrink-0">
+                          → {formatDate(ctrl.prochain_controle)}
+                        </span>
                       {/if}
                     </div>
-                    {#if ctrl.prochain_controle}
-                      <span class="text-[10px] text-slate-400 tabular-nums shrink-0">
-                        → {formatDate(ctrl.prochain_controle)}
-                      </span>
-                    {/if}
-                  </div>
-                {/each}
-              </div>
-            {/if}
+                  {/each}
+                </div>
+              {/if}
+            </div>
           </div>
-        </div>
+        {/if}
       </div>
     </div>
 
