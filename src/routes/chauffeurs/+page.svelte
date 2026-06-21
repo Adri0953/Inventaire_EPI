@@ -963,11 +963,6 @@
                             >
                           {/if}
                         </div>
-                        <p
-                          class="text-[10px] font-bold text-violet-300 uppercase tracking-wider mt-0.5"
-                        >
-                          {epi.type}
-                        </p>
 
                         {#if status === 'expired'}
                           <p
@@ -987,18 +982,18 @@
                           <p
                             class="text-[10px] font-bold text-orange-500 mt-1.5 flex items-center gap-1"
                           >
-                            <Clock class="w-3 h-3 shrink-0" />Expire dans {days} jour{days !== 1
+                            <Clock class="w-3 h-3 shrink-0" />{formatDate(epi.date_expiration)} · dans {days} jour{days !== 1
                               ? 's'
-                              : ''} · {formatDate(epi.date_expiration)}
+                              : ''}
                           </p>
                         {:else if status === 'control_soon'}
                           <p
                             class="text-[10px] font-bold text-amber-500 mt-1.5 flex items-center gap-1"
                           >
-                            <Wrench class="w-3 h-3 shrink-0" />Contrôle dans {controlDays} jour{controlDays !==
+                            <Wrench class="w-3 h-3 shrink-0" />Contrôle · {formatDate(epi.prochain_controle)} · dans {controlDays} jour{controlDays !==
                             1
                               ? 's'
-                              : ''} · {formatDate(epi.prochain_controle)}
+                              : ''}
                           </p>
                         {:else if epi.date_expiration || epi.prochain_controle}
                           <div class="flex items-center gap-3 mt-1 flex-wrap">
