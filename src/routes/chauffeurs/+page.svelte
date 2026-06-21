@@ -26,6 +26,7 @@
   import { goto } from '$app/navigation';
   import { confirmAction } from '$lib/stores/confirm';
   import { fly, fade } from 'svelte/transition';
+  import InfiniteScrollSentinel from '$lib/components/InfiniteScrollSentinel.svelte';
   import { quintOut, cubicIn } from 'svelte/easing';
 
   let { data }: { data: PageData } = $props();
@@ -108,7 +109,7 @@
   let filterActivite = $state('');
 
   type SortCol = 'nom' | 'activite' | 'epis' | 'statut' | 'expiration';
-  let sortCol = $state<SortCol>('statut');
+  let sortCol = $state<SortCol>('expiration');
   let sortDir = $state<'asc' | 'desc'>('asc');
 
   function toggleSort(col: SortCol) {
@@ -155,6 +156,15 @@
 
     return rows;
   });
+
+  // ── Pagination infinie ────────────────────────────────────────────────
+  const PAGE_SIZE = 15;
+  let visibleCount = $state(PAGE_SIZE);
+  $effect(() => {
+    void [search, filterStatus, filterActivite, sortCol, sortDir];
+    visibleCount = PAGE_SIZE;
+  });
+  const visible = $derived(filtered.slice(0, visibleCount));
 
   // ── Panel de détail ───────────────────────────────────────────────────
   let showCreatePanel = $state(false);
@@ -448,7 +458,7 @@
       </div>
     {/if}
 
-    {#each filtered as c (c.id_chauffeur)}
+    {#each visible as c (c.id_chauffeur)}
       {@const status = getEquipmentStatus(c)}
       <div
         role="row"
@@ -570,6 +580,10 @@
         </div>
       </div>
     {/each}
+    <InfiniteScrollSentinel
+      hasMore={visibleCount < filtered.length}
+      onLoadMore={() => (visibleCount += PAGE_SIZE)}
+    />
   </div>
 </div>
 
@@ -928,14 +942,7 @@
               {@const status = getEpiStatus(epi)}
               {@const days = epi.date_expiration ? daysUntil(epi.date_expiration) : null}
               {@const controlDays = epi.prochain_controle ? daysUntil(epi.prochain_controle) : null}
-              <div
-                class="rounded-2xl border bg-white shadow-sm
-                {status === 'expired' || status === 'control_overdue'
-                  ? 'border-red-200'
-                  : status === 'expiring_soon' || status === 'control_soon'
-                    ? 'border-orange-200'
-                    : 'border-slate-100'}"
-              >
+              <div class="rounded-2xl border-2 border-violet-300 bg-white shadow-sm">
                 <div class="flex">
                   <div
                     role="button"
@@ -943,12 +950,12 @@
                     onclick={() => goto('/epi?fiche=' + epi.id_epi)}
                     onkeydown={(e) =>
                       (e.key === 'Enter' || e.key === ' ') && goto('/epi?fiche=' + epi.id_epi)}
-                    class="flex-1 min-w-0 cursor-pointer hover:bg-slate-50/60 transition-colors rounded-l-2xl"
+                    class="flex-1 min-w-0 cursor-pointer hover:bg-slate-50/60 transition-colors"
                   >
                     <div class="px-3 py-3 flex items-start gap-2">
                       <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-1.5 flex-wrap">
-                          <p class="font-bold text-sm text-slate-900">{epi.designation}</p>
+                          <p class="font-bold text-sm text-violet-600">{epi.designation}</p>
                           {#if epi.taille}
                             <span
                               class="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full"
@@ -956,17 +963,14 @@
                             >
                           {/if}
                         </div>
-                        <p
-                          class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5"
-                        >
-                          {epi.type}
-                        </p>
 
                         {#if status === 'expired'}
                           <p
                             class="text-[10px] font-bold text-red-500 mt-1.5 flex items-center gap-1"
                           >
-                            <Clock class="w-3 h-3 shrink-0" />{formatDate(epi.date_expiration)}
+                            <Clock class="w-3 h-3 shrink-0" />Expiré le {formatDate(
+                              epi.date_expiration,
+                            )}
                           </p>
                         {:else if status === 'control_overdue'}
                           <p
@@ -980,31 +984,29 @@
                           <p
                             class="text-[10px] font-bold text-orange-500 mt-1.5 flex items-center gap-1"
                           >
-                            <Clock class="w-3 h-3 shrink-0" />Dans {days} jour{days !== 1
-                              ? 's'
-                              : ''} · {formatDate(epi.date_expiration)}
+                            <Clock class="w-3 h-3 shrink-0" />{formatDate(epi.date_expiration)} · dans
+                            {days} jour{days !== 1 ? 's' : ''}
                           </p>
                         {:else if status === 'control_soon'}
                           <p
                             class="text-[10px] font-bold text-amber-500 mt-1.5 flex items-center gap-1"
                           >
-                            <Wrench class="w-3 h-3 shrink-0" />Contrôle dans {controlDays} jour{controlDays !==
-                            1
-                              ? 's'
-                              : ''} · {formatDate(epi.prochain_controle)}
+                            <Wrench class="w-3 h-3 shrink-0" />Contrôle · {formatDate(
+                              epi.prochain_controle,
+                            )} · dans {controlDays} jour{controlDays !== 1 ? 's' : ''}
                           </p>
                         {:else if epi.date_expiration || epi.prochain_controle}
                           <div class="flex items-center gap-3 mt-1 flex-wrap">
                             {#if epi.date_expiration}
                               <span
-                                class="text-[10px] text-slate-300 font-medium flex items-center gap-0.5"
+                                class="text-[10px] text-violet-400 font-medium flex items-center gap-0.5"
                               >
                                 <Clock class="w-3 h-3" />{formatDate(epi.date_expiration)}
                               </span>
                             {/if}
                             {#if epi.prochain_controle}
                               <span
-                                class="text-[10px] text-slate-300 font-medium flex items-center gap-0.5"
+                                class="text-[10px] text-violet-400 font-medium flex items-center gap-0.5"
                               >
                                 <Wrench class="w-3 h-3" />{formatDate(epi.prochain_controle)}
                               </span>
@@ -1014,31 +1016,6 @@
                       </div>
 
                       <div class="flex items-center gap-1 shrink-0 mt-0.5">
-                        <span
-                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black whitespace-nowrap
-                          {status === 'expired'
-                            ? 'bg-red-100 text-red-600'
-                            : status === 'control_overdue'
-                              ? 'bg-red-50 border border-red-200 text-red-700'
-                              : status === 'expiring_soon'
-                                ? 'bg-orange-100 text-orange-600'
-                                : status === 'control_soon'
-                                  ? 'bg-amber-100 text-amber-600'
-                                  : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}"
-                        >
-                          {#if status === 'expired'}
-                            <TriangleAlert class="w-2.5 h-2.5" />Expiré
-                          {:else if status === 'control_overdue'}
-                            <Wrench class="w-2.5 h-2.5" />Contrôle dépassé
-                          {:else if status === 'expiring_soon'}
-                            <Clock class="w-2.5 h-2.5" />Expiration proche
-                          {:else if status === 'control_soon'}
-                            <Wrench class="w-2.5 h-2.5" />Contrôle proche
-                          {:else}
-                            <ShieldCheck class="w-2.5 h-2.5" />En ordre
-                          {/if}
-                        </span>
-
                         <div role="none" class="relative" onclick={(e) => e.stopPropagation()}>
                           <button
                             type="button"
@@ -1085,41 +1062,6 @@
                                   <X class="w-3.5 h-3.5" />Retirer
                                 </button>
                               </form>
-                              {#if status !== 'expired'}
-                                <form
-                                  method="POST"
-                                  action="?/hors_service"
-                                  use:enhance={async ({ cancel }) => {
-                                    const ok = await confirmAction({
-                                      title: 'Mettre hors service',
-                                      message: `Marquer "${epi.designation}" comme hors service ? Il sera désattribué et le stock diminuera de 1.`,
-                                      confirmLabel: 'Confirmer',
-                                      confirmVariant: 'danger',
-                                    });
-                                    if (!ok) {
-                                      cancel();
-                                      return;
-                                    }
-                                    return ({ update }) => {
-                                      epiMenuOpen = {};
-                                      update();
-                                    };
-                                  }}
-                                >
-                                  <input
-                                    type="hidden"
-                                    name="id_attribution"
-                                    value={epi.id_attribution}
-                                  />
-                                  <input type="hidden" name="id_epi" value={epi.id_epi} />
-                                  <button
-                                    type="submit"
-                                    class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-red-600 hover:bg-red-50 transition-colors text-left"
-                                  >
-                                    <ShieldX class="w-3.5 h-3.5" />Hors service
-                                  </button>
-                                </form>
-                              {/if}
                               <button
                                 type="button"
                                 onclick={() => {

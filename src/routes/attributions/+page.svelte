@@ -7,6 +7,7 @@
   import { page } from '$app/stores';
   import { fly, fade } from 'svelte/transition';
   import { quintOut, cubicIn } from 'svelte/easing';
+  import InfiniteScrollSentinel from '$lib/components/InfiniteScrollSentinel.svelte';
   import {
     ArrowRightLeft,
     Package,
@@ -116,6 +117,15 @@
   function toggleStatut(s: 'active' | 'returned' | 'month') {
     filterStatut = filterStatut === s ? '' : s;
   }
+
+  // ── Pagination infinie ────────────────────────────────────────────────
+  const PAGE_SIZE = 15;
+  let visibleCount = $state(PAGE_SIZE);
+  $effect(() => {
+    void [search, filterChauffeur, filterType, filterStatut, sortCol, sortDir];
+    visibleCount = PAGE_SIZE;
+  });
+  const visible = $derived(filtered.slice(0, visibleCount));
 
   // ── Panneau de détail ─────────────────────────────────────────────────
   let selectedAttrId = $state<string | null>(null);
@@ -461,7 +471,7 @@
       </div>
     {/if}
 
-    {#each filtered as a (a.id_attribution)}
+    {#each visible as a (a.id_attribution)}
       {@const active = !a.date_retour}
       <div
         role="row"
@@ -573,6 +583,10 @@
         </div>
       </div>
     {/each}
+    <InfiniteScrollSentinel
+      hasMore={visibleCount < filtered.length}
+      onLoadMore={() => (visibleCount += PAGE_SIZE)}
+    />
   </div>
 </div>
 

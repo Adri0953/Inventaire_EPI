@@ -24,6 +24,7 @@
   } from 'lucide-svelte';
   import { fly, fade, slide } from 'svelte/transition';
   import { quintOut, cubicIn } from 'svelte/easing';
+  import InfiniteScrollSentinel from '$lib/components/InfiniteScrollSentinel.svelte';
 
   let { data }: { data: PageData } = $props();
 
@@ -148,6 +149,15 @@
       return { label: 'Bas', class: 'bg-yellow-100 text-yellow-700' };
     return { label: 'OK', class: 'bg-emerald-100 text-emerald-700' };
   }
+
+  // ── Pagination infinie ────────────────────────────────────────────────
+  const PAGE_SIZE = 15;
+  let visibleCount = $state(PAGE_SIZE);
+  $effect(() => {
+    void [recherche, filtreType, filtreAlerte, triColonne, triAsc];
+    visibleCount = PAGE_SIZE;
+  });
+  const modelesVisibles = $derived(modelesFiltres.slice(0, visibleCount));
 
   // ── Ouverture des panneaux ────────────────────────────────────────────
   function ouvrirCreation() {
@@ -475,7 +485,7 @@
     {/if}
 
     <div class="divide-y divide-gray-100">
-      {#each modelesFiltres as modele (modele.id_modele_epi)}
+      {#each modelesVisibles as modele (modele.id_modele_epi)}
         {@const dispo = disponiblesParModele[modele.id_modele_epi] ?? 0}
         {@const pct = modele.stock_total > 0 ? Math.round((dispo / modele.stock_total) * 100) : 0}
         {@const badge = getBadgeAlerte(modele, dispo)}
@@ -589,6 +599,10 @@
           </div>
         </div>
       {/each}
+      <InfiniteScrollSentinel
+        hasMore={visibleCount < modelesFiltres.length}
+        onLoadMore={() => (visibleCount += PAGE_SIZE)}
+      />
     </div>
   </div>
 </div>
