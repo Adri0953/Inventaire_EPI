@@ -10,9 +10,23 @@
   import logo from '$lib/assets/logo.jpg';
   export let data;
 
+  // Couleur d'accentuation par section : { fond sombre, accent vif }
+  const ACCENTS: Record<string, { dark: string; accent: string }> = {
+    '/dashboard': { dark: '#1d4ed8', accent: '#3b82f6' },
+    '/chauffeurs': { dark: '#1d4ed8', accent: '#2563eb' },
+    '/epi': { dark: '#5b21b6', accent: '#7c3aed' },
+    '/attributions': { dark: '#047857', accent: '#059669' },
+    '/stocks': { dark: '#d4a017', accent: '#eab308' },
+  };
+  const DEFAULT_ACCENT = { dark: '#0f1f5c', accent: '#3b82f6' };
+
   $: currentIndex = ROUTES.findIndex((r) => $page.url.pathname.startsWith(r));
   $: prevRoute = currentIndex > 0 ? ROUTES[currentIndex - 1] : null;
   $: nextRoute = currentIndex < ROUTES.length - 1 ? ROUTES[currentIndex + 1] : null;
+
+  $: theme =
+    ROUTES.map((r) => ({ r, t: ACCENTS[r] })).find(({ r }) => $page.url.pathname.startsWith(r))
+      ?.t ?? DEFAULT_ACCENT;
 
   onNavigate((nav) => {
     if (!document.startViewTransition) return;
@@ -32,10 +46,10 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <div class="app">
-  <header class="app-header">
+  <header class="app-header" style="--h-dark: {theme.dark}; --h-accent: {theme.accent}">
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
     <a href="/dashboard" class="header-title">
-      <img src={logo} alt="Logo" class="w-10 h-10" />
+      <img src={logo} alt="Logo" />
       <h1>Inventaire EPI</h1>
     </a>
 
