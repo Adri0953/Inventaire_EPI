@@ -154,7 +154,7 @@
   const PAGE_SIZE = 15;
   let visibleCount = $state(PAGE_SIZE);
   $effect(() => {
-    recherche; filtreType; filtreAlerte; triColonne; triAsc;
+    void [recherche, filtreType, filtreAlerte, triColonne, triAsc];
     visibleCount = PAGE_SIZE;
   });
   const modelesVisibles = $derived(modelesFiltres.slice(0, visibleCount));

@@ -161,7 +161,7 @@
   const PAGE_SIZE = 15;
   let visibleCount = $state(PAGE_SIZE);
   $effect(() => {
-    search; filterStatus; filterActivite; sortCol; sortDir;
+    void [search, filterStatus, filterActivite, sortCol, sortDir];
     visibleCount = PAGE_SIZE;
   });
   const visible = $derived(filtered.slice(0, visibleCount));
@@ -968,7 +968,9 @@
                           <p
                             class="text-[10px] font-bold text-red-500 mt-1.5 flex items-center gap-1"
                           >
-                            <Clock class="w-3 h-3 shrink-0" />Expiré le {formatDate(epi.date_expiration)}
+                            <Clock class="w-3 h-3 shrink-0" />Expiré le {formatDate(
+                              epi.date_expiration,
+                            )}
                           </p>
                         {:else if status === 'control_overdue'}
                           <p
@@ -982,18 +984,16 @@
                           <p
                             class="text-[10px] font-bold text-orange-500 mt-1.5 flex items-center gap-1"
                           >
-                            <Clock class="w-3 h-3 shrink-0" />{formatDate(epi.date_expiration)} · dans {days} jour{days !== 1
-                              ? 's'
-                              : ''}
+                            <Clock class="w-3 h-3 shrink-0" />{formatDate(epi.date_expiration)} · dans
+                            {days} jour{days !== 1 ? 's' : ''}
                           </p>
                         {:else if status === 'control_soon'}
                           <p
                             class="text-[10px] font-bold text-amber-500 mt-1.5 flex items-center gap-1"
                           >
-                            <Wrench class="w-3 h-3 shrink-0" />Contrôle · {formatDate(epi.prochain_controle)} · dans {controlDays} jour{controlDays !==
-                            1
-                              ? 's'
-                              : ''}
+                            <Wrench class="w-3 h-3 shrink-0" />Contrôle · {formatDate(
+                              epi.prochain_controle,
+                            )} · dans {controlDays} jour{controlDays !== 1 ? 's' : ''}
                           </p>
                         {:else if epi.date_expiration || epi.prochain_controle}
                           <div class="flex items-center gap-3 mt-1 flex-wrap">

@@ -122,7 +122,7 @@
   const PAGE_SIZE = 15;
   let visibleCount = $state(PAGE_SIZE);
   $effect(() => {
-    search; filterChauffeur; filterType; filterStatut; sortCol; sortDir;
+    void [search, filterChauffeur, filterType, filterStatut, sortCol, sortDir];
     visibleCount = PAGE_SIZE;
   });
   const visible = $derived(filtered.slice(0, visibleCount));
