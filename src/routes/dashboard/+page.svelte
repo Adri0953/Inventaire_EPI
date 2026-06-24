@@ -3,6 +3,8 @@
   import samatBack from '$lib/assets/logo.jpg';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
+  import { dashboardAlertCount } from '$lib/stores/dashboardAlerts';
+  import { onDestroy } from 'svelte';
   import {
     TriangleAlert,
     Package,
@@ -46,6 +48,12 @@
   const totalAlerts = $derived(
     alerts.expiring.length + alerts.lowStock.length + alerts.controls.length,
   );
+
+  $effect(() => {
+    dashboardAlertCount.set(totalAlerts);
+  });
+
+  onDestroy(() => dashboardAlertCount.set(0));
 
   const tauxAttribution = $derived(
     stats.total > 0 ? Math.round((stats.attribues / stats.total) * 100) : 0,

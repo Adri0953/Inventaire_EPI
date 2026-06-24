@@ -8,6 +8,7 @@
   import { ROUTES } from '$lib/nav';
   import favicon from '$lib/assets/favicon.svg';
   import logo from '$lib/assets/logo.jpg';
+  import { dashboardAlertCount } from '$lib/stores/dashboardAlerts';
   export let data;
 
   // Couleur d'accentuation par section : { fond sombre, accent vif }
@@ -24,9 +25,13 @@
   $: prevRoute = currentIndex > 0 ? ROUTES[currentIndex - 1] : null;
   $: nextRoute = currentIndex < ROUTES.length - 1 ? ROUTES[currentIndex + 1] : null;
 
-  $: theme =
-    ROUTES.map((r) => ({ r, t: ACCENTS[r] })).find(({ r }) => $page.url.pathname.startsWith(r))
-      ?.t ?? DEFAULT_ACCENT;
+  $: isDashboardWithAlerts =
+    $page.url.pathname.startsWith('/dashboard') && $dashboardAlertCount > 0;
+
+  $: theme = isDashboardWithAlerts
+    ? { dark: '#dc2626', accent: '#f87171' }
+    : (ROUTES.map((r) => ({ r, t: ACCENTS[r] })).find(({ r }) => $page.url.pathname.startsWith(r))
+        ?.t ?? DEFAULT_ACCENT);
 
   onNavigate((nav) => {
     if (!document.startViewTransition) return;
